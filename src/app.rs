@@ -1,5 +1,4 @@
 use axum::Router;
-use std::io;
 use tokio::net::TcpListener;
 pub struct App {
     router: Router,
@@ -12,21 +11,24 @@ impl App {
         }
     }
 
-    pub async fn run(&self, local_addr: &str) -> Result<(), io::Error> {
-        let mut listenfd = listenfd::ListenFd::from_env();
-        let tcp_listener = if let Ok(Some(tcp)) = listenfd.take_tcp_listener(0) {
-            tcp.set_nonblocking(true).unwrap();
-            TcpListener::from_std(tcp).unwrap()
-        } else {
-            TcpListener::bind(local_addr).await.unwrap()
-        };
+    pub async fn run(&self) {
+        let tcp_listener = Self::tcp_listener().await;
 
-        #[cfg(debug_assertions)]
         println!("Listening on {}", tcp_listener.local_addr().unwrap());
-
         axum::serve(tcp_listener, self.router.clone())
             .await
             .unwrap();
-        Ok(())
+    }
+
+    async fn tcp_listener() -> TcpListener {
+        #[cfg(debug_assertions)]
+        {
+            let mut listenfd = listenfd::ListenFd::from_env();
+            if let Ok(Some(tcp)) = listenfd.take_tcp_listener(0) {
+                tcp.set_nonblocking(true).unwrap();
+                return TcpListener::from_std(tcp).unwrap();
+            }
+        }
+        TcpListener::bind("127.0.0.1:8000").await.unwrap()
     }
 }
