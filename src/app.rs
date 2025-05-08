@@ -1,4 +1,4 @@
-use axum::Router;
+use axum::{Router, routing::MethodRouter};
 use tokio::net::TcpListener;
 pub struct App {
     router: Router,
@@ -9,6 +9,10 @@ impl App {
         App {
             router: Router::new(),
         }
+    }
+
+    pub fn add_route(&mut self, path: &str, method_router: MethodRouter) {
+        self.router = self.router.clone().route(path, method_router)
     }
 
     pub async fn run(&self) {
