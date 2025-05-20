@@ -655,10 +655,20 @@ name = "lan_frame"
 version = "0.1.0"
 dependencies = [
  "axum",
+ "lan_frame_macros",
  "listenfd",
  "mysql",
  "refinery",
  "tokio",
+]
+
+[[package]]
+name = "lan_frame_macros"
+version = "0.1.0"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn",
 ]
 
 [[package]]
