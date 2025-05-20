@@ -1,34 +1,46 @@
-// pub struct DB;
+use mysql::{OptsBuilder, Pool};
+use refinery::Runner;
 
-// impl DB {
-//     pub fn get_pool() -> Pool {
-//         let pool = connect();
-//         migrate(&pool);
-//         pool
-//     }
+pub struct DBConnectInfo {
+    pub url: String,
+    pub user: String,
+    pub password: String,
+    pub schema_name: String,
+}
 
-//     fn connect() -> Pool {
-//         let opts = OptsBuilder::new()
-//             .ip_or_hostname(Some(DB_URL))
-//             .user(Some(DB_USER))
-//             .pass(Some(DB_PASSWORD))
-//             .db_name(Some(DB_SCHEMA_NAME));
-//         let pool = Pool::new(opts).expect("Failed to get DB pool");
-//         println!("DB connected");
-//         pool
-//     }
+pub struct DBConnect;
 
-//     fn migrate(pool: &Pool) {
-//         let mut conn = pool.get_conn().expect("Failed to get connection");
-//         match internal::embedded::migrations::runner().run(&mut conn) {
-//             Ok(report) => {
-//                 report.applied_migrations().iter().for_each(|migration| {
-//                     println!("Applied migration: {}", migration.name());
-//                 });
-//             }
-//             Err(e) => {
-//                 panic!("Migration failed: {:?}", e);
-//             }
-//         }
-//     }
-// }
+impl DBConnect {
+    pub fn get_pool(info: DBConnectInfo, migrate_runner_option: Option<&Runner>) -> Pool {
+        let pool = Self::connect(info);
+        if let Some(runner) = migrate_runner_option {
+            Self::migrate(&pool, runner);
+        }
+        pool
+    }
+
+    fn connect(info: DBConnectInfo) -> Pool {
+        let opts = OptsBuilder::new()
+            .ip_or_hostname(Some(info.url))
+            .user(Some(info.user))
+            .pass(Some(info.password))
+            .db_name(Some(info.schema_name));
+        let pool = Pool::new(opts).expect("Failed to get DB pool");
+        println!("DB connected");
+        pool
+    }
+
+    fn migrate(pool: &Pool, runner: &Runner) {
+        let mut conn = pool.get_conn().expect("Failed to get connection");
+        match runner.run(&mut conn) {
+            Ok(report) => {
+                report.applied_migrations().iter().for_each(|migration| {
+                    println!("Applied migration: {}", migration.name());
+                });
+            }
+            Err(e) => {
+                panic!("Migration failed: {:?}", e);
+            }
+        }
+    }
+}

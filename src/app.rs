@@ -20,6 +20,7 @@ impl App {
         self.db_pool = Some(pool);
     }
 
+    // Remove it and add add_module instead
     pub fn add_route(&mut self, path: &str, method: MethodRouter) {
         self.routes.push((path.to_string(), method));
     }
