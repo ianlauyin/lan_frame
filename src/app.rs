@@ -3,6 +3,7 @@ use listenfd::ListenFd;
 use mysql::Pool;
 use tokio::net::TcpListener;
 
+// TODO: remove routes and add modules
 pub struct App {
     routes: Vec<(String, MethodRouter)>,
     db_pool: Option<Pool>,
@@ -20,7 +21,7 @@ impl App {
         self.db_pool = Some(pool);
     }
 
-    // Remove it and add add_module instead
+    // TODO: Remove it and add add_module instead
     pub fn add_route(&mut self, path: &str, method: MethodRouter) {
         self.routes.push((path.to_string(), method));
     }
