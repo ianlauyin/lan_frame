@@ -5,6 +5,13 @@ use tokio::net::TcpListener;
 
 use crate::module::Module;
 
+#[macro_export]
+macro_rules! add_module {
+    ($app:expr , $module:expr ) => {
+        $app.add_module(Box::new($module));
+    };
+}
+
 pub struct App {
     modules: Vec<Box<dyn Module>>,
     db_pool: Option<Pool>,
@@ -20,10 +27,6 @@ impl App {
 
     pub fn add_db(&mut self, pool: Pool) {
         self.db_pool = Some(pool);
-    }
-
-    pub fn add_module(&mut self, module: Box<dyn Module>) {
-        self.modules.push(module);
     }
 
     pub async fn run(&mut self) -> Result<(), Box<dyn std::error::Error>> {
@@ -49,5 +52,9 @@ impl App {
             }
         }
         Ok(TcpListener::bind("127.0.0.1:8000").await?)
+    }
+
+    pub fn add_module(&mut self, module: Box<dyn Module>) {
+        self.modules.push(module);
     }
 }
