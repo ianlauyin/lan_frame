@@ -1,18 +1,19 @@
-use axum::{Router, routing::MethodRouter};
+use axum::Router;
 use listenfd::ListenFd;
 use mysql::Pool;
 use tokio::net::TcpListener;
 
-// TODO: remove routes and add modules
+use crate::module::Module;
+
 pub struct App {
-    routes: Vec<(String, MethodRouter)>,
+    modules: Vec<Box<dyn Module>>,
     db_pool: Option<Pool>,
 }
 
 impl App {
     pub fn new() -> App {
         Self {
-            routes: Vec::new(),
+            modules: Vec::new(),
             db_pool: None,
         }
     }
@@ -21,17 +22,16 @@ impl App {
         self.db_pool = Some(pool);
     }
 
-    // TODO: Remove it and add add_module instead
-    pub fn add_route(&mut self, path: &str, method: MethodRouter) {
-        self.routes.push((path.to_string(), method));
+    pub fn add_module(&mut self, module: Box<dyn Module>) {
+        self.modules.push(module);
     }
 
     pub async fn run(&mut self) -> Result<(), Box<dyn std::error::Error>> {
         let tcp_listener = Self::tcp_listener().await?;
         let mut router = Router::new().with_state(self.db_pool.clone());
 
-        for (path, method) in self.routes.iter() {
-            router = router.route(path, method.clone());
+        for module in self.modules.iter() {
+            router = router.nest("/", module.router());
         }
 
         println!("Listening on {}", tcp_listener.local_addr()?);
