@@ -11,9 +11,9 @@ pub struct DBConnectInfo {
 pub struct DBConnect;
 
 impl DBConnect {
-    pub fn get_pool(info: DBConnectInfo, migrate_runner_option: Option<&Runner>) -> Pool {
+    pub fn get_pool(info: DBConnectInfo, optional_migration_runner: Option<&Runner>) -> Pool {
         let pool = Self::connect(info);
-        if let Some(runner) = migrate_runner_option {
+        if let Some(runner) = optional_migration_runner {
             Self::migrate(&pool, runner);
         }
         pool
