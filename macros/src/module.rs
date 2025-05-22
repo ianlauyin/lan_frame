@@ -1,34 +1,52 @@
 use proc_macro2::TokenStream;
 use quote::quote;
-use syn::DeriveInput;
+use syn::{Attribute, DeriveInput, Ident, LitStr};
+
+struct ModuleAttr<'a> {
+    name: &'a Ident,
+    route: Option<String>,
+}
 
 pub fn derive(input: TokenStream) -> TokenStream {
     let ast: DeriveInput = syn::parse2(input).unwrap();
     let name = &ast.ident;
 
+    let mut module_attr = ModuleAttr {
+        name: name,
+        route: None,
+    };
+
+    for attr in ast.attrs.iter() {
+        if attr.path().is_ident("route") {
+            module_attr.route = Some(parse_route_fn(attr));
+        }
+    }
+
+    parse_attributes(module_attr)
+}
+
+fn parse_route_fn(attr: &Attribute) -> String {
+    let Ok(lit) = attr.parse_args::<LitStr>() else {
+        panic!("route must be string")
+    };
+    lit.value()
+}
+
+fn parse_attributes(module_attr: ModuleAttr) -> TokenStream {
+    let name = module_attr.name;
+    let route = module_attr.route.unwrap_or("/".to_string());
+
     quote! {
-        use lan_frame::axum;
+        use lan_frame::axum::Router;
 
         impl Module for #name {
-            fn router(&self) -> axum::Router {
-                axum::Router::new()
+            fn route(&self) -> &str {
+                #route
+            }
+
+            fn router(&self) -> Router {
+                Router::new()
             }
         }
     }
-}
-
-pub fn get(args: TokenStream, input: TokenStream) -> TokenStream {
-    input
-}
-
-pub fn post(args: TokenStream, input: TokenStream) -> TokenStream {
-    input
-}
-
-pub fn put(args: TokenStream, input: TokenStream) -> TokenStream {
-    input
-}
-
-pub fn delete(args: TokenStream, input: TokenStream) -> TokenStream {
-    input
 }

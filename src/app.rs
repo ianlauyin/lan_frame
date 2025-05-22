@@ -8,7 +8,7 @@ use crate::module::Module;
 #[macro_export]
 macro_rules! add_module {
     ($app:expr , $module:expr ) => {
-        $app.add_module(Box::new($module));
+        $app._internal_add_module(Box::new($module));
     };
 }
 
@@ -54,7 +54,7 @@ impl App {
         Ok(TcpListener::bind("127.0.0.1:8000").await?)
     }
 
-    pub fn add_module(&mut self, module: Box<dyn Module>) {
+    pub fn _internal_add_module(&mut self, module: Box<dyn Module>) {
         self.modules.push(module);
     }
 }
