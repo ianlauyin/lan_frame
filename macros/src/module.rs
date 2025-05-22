@@ -7,6 +7,7 @@ struct ModuleAttr<'a> {
     route: Option<String>,
 }
 
+// TODO: Add get, post, put, delete, db
 pub fn derive(input: TokenStream) -> TokenStream {
     let ast: DeriveInput = syn::parse2(input).unwrap();
     let name = &ast.ident;
@@ -40,6 +41,10 @@ fn parse_attributes(module_attr: ModuleAttr) -> TokenStream {
         use lan_frame::axum::Router;
 
         impl Module for #name {
+            fn name(&self) -> &str{
+                #name
+            }
+
             fn route(&self) -> &str {
                 #route
             }

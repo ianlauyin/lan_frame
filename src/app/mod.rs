@@ -3,19 +3,20 @@ mod macros;
 use axum::Router;
 use listenfd::ListenFd;
 use mysql::Pool;
+use std::collections::HashMap;
 use tokio::net::TcpListener;
 
 use crate::module::Module;
 
 pub struct App {
-    modules: Vec<Box<dyn Module>>,
+    modules: HashMap<String, Box<dyn Module>>,
     db_pool: Option<Pool>,
 }
 
 impl App {
     pub fn new() -> App {
         Self {
-            modules: Vec::new(),
+            modules: HashMap::new(),
             db_pool: None,
         }
     }
@@ -25,7 +26,7 @@ impl App {
         let tcp_listener = Self::tcp_listener().await;
         let mut router = Router::new().with_state(self.db_pool.clone());
 
-        for module in self.modules.iter() {
+        for module in self.modules.values() {
             router = router.nest(module.route(), module.router());
         }
 
@@ -45,15 +46,17 @@ impl App {
         TcpListener::bind("127.0.0.1:8000").await.unwrap()
     }
 
-    // TODO : make it internal after add a db macro
     #[doc(hidden)]
     pub fn _internal_add_db(&mut self, pool: Pool) {
         self.db_pool = Some(pool);
     }
 
-    // TODO: Add check for module duplication
     #[doc(hidden)]
     pub fn _internal_add_module(&mut self, module: Box<dyn Module>) {
-        self.modules.push(module);
+        let name = module.name().to_string();
+        if self.modules.contains_key(&name) {
+            panic!("Module {} already exists", name);
+        }
+        self.modules.insert(name, module);
     }
 }
