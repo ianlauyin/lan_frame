@@ -3,17 +3,17 @@ use quote::quote;
 use syn::{Attribute, DeriveInput, Ident, LitStr};
 
 struct ModuleAttr<'a> {
-    name: &'a Ident,
+    module: &'a Ident,
     route: Option<String>,
 }
 
 // TODO: Add get, post, put, delete, db
 pub fn derive(input: TokenStream) -> TokenStream {
     let ast: DeriveInput = syn::parse2(input).unwrap();
-    let name = &ast.ident;
+    let module = &ast.ident;
 
     let mut module_attr = ModuleAttr {
-        name: name,
+        module,
         route: None,
     };
 
@@ -34,13 +34,14 @@ fn parse_route(attr: &Attribute) -> String {
 }
 
 fn parse_attributes(module_attr: ModuleAttr) -> TokenStream {
-    let name = module_attr.name;
+    let module = module_attr.module;
+    let name = &module.to_string();
     let route = module_attr.route.unwrap_or("/".to_string());
 
     quote! {
         use lan_frame::axum::Router;
 
-        impl Module for #name {
+        impl Module for #module {
             fn name(&self) -> &str{
                 #name
             }
