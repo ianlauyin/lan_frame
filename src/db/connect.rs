@@ -8,7 +8,7 @@ pub struct DBConnectInfo<'a> {
     pub schema_name: &'a str,
 }
 
-pub fn _internal_connect(info: DBConnectInfo) -> Pool {
+pub fn _internal_get_pool(info: DBConnectInfo) -> Pool {
     let opts = OptsBuilder::new()
         .ip_or_hostname(Some(info.url))
         .user(Some(info.user))
