@@ -18,14 +18,14 @@ pub fn derive(input: TokenStream) -> TokenStream {
 
     for attr in ast.attrs.iter() {
         if attr.path().is_ident("route") {
-            module_attr.route = Some(parse_route_fn(attr));
+            module_attr.route = Some(parse_route(attr));
         }
     }
 
     parse_attributes(module_attr)
 }
 
-fn parse_route_fn(attr: &Attribute) -> String {
+fn parse_route(attr: &Attribute) -> String {
     let Ok(lit) = attr.parse_args::<LitStr>() else {
         panic!("route must be string")
     };
