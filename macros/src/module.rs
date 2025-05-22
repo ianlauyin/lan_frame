@@ -1,21 +1,22 @@
 use proc_macro2::TokenStream;
 use quote::quote;
-use syn::{Attribute, DeriveInput, Ident, LitStr};
+use syn::{
+    Attribute, DeriveInput, Expr, ExprPath, Ident, Lit, LitStr, Token, punctuated::Punctuated,
+};
 
 struct ModuleAttr<'a> {
     module: &'a Ident,
     route: Option<String>,
-    method_handlers: Vec<(String, TokenStream)>,
+    method_handlers: Vec<MethodHandler<'a>>,
 }
 
-enum Method {
-    Get,
-    Post,
-    Put,
-    Delete,
+struct MethodHandler<'a> {
+    method: &'a Ident,
+    route: LitStr,
+    handler: ExprPath,
 }
 
-// TODO: Add get, post, put, delete, db
+// TODO: Add db helper
 pub fn derive(input: TokenStream) -> TokenStream {
     let ast: DeriveInput = syn::parse2(input).unwrap();
     let module = &ast.ident;
@@ -33,15 +34,8 @@ pub fn derive(input: TokenStream) -> TokenStream {
         }
 
         if let Some(ident) = attr.path().get_ident() {
-            let method_op = match ident.to_string().as_str() {
-                "get" => Some(Method::Get),
-                "post" => Some(Method::Post),
-                "put" => Some(Method::Put),
-                "delete" => Some(Method::Delete),
-                _ => None,
-            };
-            if let Some(method) = method_op {
-                module_attr.method_handlers.push(parse_method(attr, method));
+            if ["get", "post", "put", "delete"].contains(&ident.to_string().as_str()) {
+                module_attr.method_handlers.push(parse_method(attr, &ident));
             }
         }
     }
@@ -56,10 +50,37 @@ fn parse_route(attr: &Attribute) -> String {
     lit.value()
 }
 
-fn parse_method(attr: &Attribute, method: Method) -> (String, TokenStream) {
-    todo!()
+fn parse_method<'a>(attr: &Attribute, method: &'a Ident) -> MethodHandler<'a> {
+    let punctuated = attr
+        .parse_args_with(Punctuated::<Expr, Token![,]>::parse_terminated)
+        .unwrap();
+
+    let mut punctuated_iter = punctuated.into_iter();
+    let Some(route_expr) = punctuated_iter.next() else {
+        panic!("route is missing")
+    };
+    let Expr::Lit(route_lit) = route_expr else {
+        panic!("route must be literal")
+    };
+    let Lit::Str(route) = route_lit.lit else {
+        panic!("route must be string literal")
+    };
+
+    let Some(handler_expr) = punctuated_iter.next() else {
+        panic!("handler is missing")
+    };
+    let Expr::Path(handler) = handler_expr else {
+        panic!("handler must be path")
+    };
+
+    MethodHandler {
+        method,
+        route,
+        handler,
+    }
 }
 
+// TODO: Update method handler here
 fn parse_attributes(module_attr: ModuleAttr) -> TokenStream {
     let module = module_attr.module;
     let name = &module.to_string();

@@ -666,7 +666,6 @@ dependencies = [
 name = "lan_frame_macros"
 version = "0.1.0"
 dependencies = [
- "axum",
  "proc-macro2",
  "quote",
  "syn",
