@@ -1,9 +1,9 @@
-use axum::Router;
+use axum::{Router, routing::MethodRouter};
 
 pub use lan_frame_macros::{interface, module};
 
 pub trait Module {
-    fn name(&self) -> &str;
-    fn route(&self) -> &str;
-    fn router(&self) -> Router;
+    fn _name(&self) -> &str;
+    fn _router(&self) -> Router;
+    fn _add_route(&mut self, route: &str, handler: MethodRouter);
 }

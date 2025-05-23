@@ -5,8 +5,8 @@ use proc_macro::TokenStream;
 
 // Module related
 #[proc_macro_attribute]
-pub fn module(args: TokenStream, input: TokenStream) -> TokenStream {
-    module::derive_module(args.into(), input.into()).into()
+pub fn module(_: TokenStream, input: TokenStream) -> TokenStream {
+    module::derive_module(input.into()).into()
 }
 
 #[proc_macro_attribute]

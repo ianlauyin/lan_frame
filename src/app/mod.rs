@@ -27,7 +27,7 @@ impl App {
         let mut router = Router::new().with_state(self.db_pool.clone());
 
         for module in self.modules.values() {
-            router = router.nest(module.route(), module.router());
+            router = router.nest("/", module._router());
         }
 
         println!("Listening on {}", tcp_listener.local_addr().unwrap());
@@ -53,7 +53,7 @@ impl App {
 
     #[doc(hidden)]
     pub fn _internal_add_module(&mut self, module: Box<dyn Module>) {
-        let name = module.name().to_string();
+        let name = module._name().to_string();
         if self.modules.contains_key(&name) {
             panic!("Module {} already exists", name);
         }

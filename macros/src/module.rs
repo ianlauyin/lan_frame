@@ -1,8 +1,68 @@
 use proc_macro2::TokenStream;
 use quote::quote;
+use syn::{
+    Data, DeriveInput, Field, Fields, FieldsNamed, parse::Parser, parse2, punctuated::Punctuated,
+    token::Brace,
+};
 
-pub fn derive_module(args: TokenStream, input: TokenStream) -> TokenStream {
-    todo!()
+pub fn derive_module(input: TokenStream) -> TokenStream {
+    let mut ast: DeriveInput = parse2(input).unwrap();
+    add_router(&mut ast);
+    let impl_module = get_impl_module(&ast);
+
+    quote! {
+        #ast
+        #impl_module
+    }
+}
+
+fn add_router(ast: &mut DeriveInput) {
+    let Data::Struct(data_struct) = &mut ast.data else {
+        panic!("Module must be a struct");
+    };
+    let new_field_token = quote! {_router: lan_frame::axum::Router};
+    let new_field = Field::parse_named.parse2(new_field_token).unwrap();
+
+    match &mut data_struct.fields {
+        Fields::Named(fields) => {
+            fields.named.push(new_field);
+        }
+        Fields::Unit => {
+            data_struct.fields = Fields::Named(FieldsNamed {
+                brace_token: Brace::default(),
+                named: Punctuated::from_iter(vec![new_field]),
+            });
+        }
+        Fields::Unnamed(_) => panic!("Module must have unnamed fields"),
+    };
+}
+
+fn get_impl_module(ast: &DeriveInput) -> TokenStream {
+    let module = &ast.ident;
+    let name = &module.to_string();
+    quote!(
+        impl #module {
+            pub fn new() -> Self {
+                Self {
+                    _router: lan_frame::axum::Router::new(),
+                }
+            }
+        }
+
+        impl lan_frame::module::Module for #module {
+            fn _name(&self) -> &str {
+                #name
+            }
+
+            fn _add_route(&mut self, route: &str, handler: lan_frame::axum::routing::MethodRouter) {
+                self._router = self._router.clone().route(route, handler);
+            }
+
+            fn _router(&self) -> lan_frame::axum::Router {
+                self._router.clone()
+            }
+        }
+    )
 }
 
 pub fn derive_interface(input: TokenStream) -> TokenStream {
