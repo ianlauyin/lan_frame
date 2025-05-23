@@ -10,7 +10,8 @@ struct ModuleAttr<'a> {
     route: Option<TokenStream>,
     sub_routes: Vec<TokenStream>,
 }
-// TODO: Add db helper
+
+// TODO: Add db helper and for the method handler
 pub fn derive(input: TokenStream) -> TokenStream {
     let ast: DeriveInput = parse2(input).unwrap();
     let module = &ast.ident;
