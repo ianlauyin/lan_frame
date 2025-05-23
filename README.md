@@ -4,8 +4,11 @@ A Backend framework using for myself
 
 ## Require Dependancy
 
-`refinery`
 `serde`
+
+## Optional Dependancy
+
+db auto migrations: `refinery`
 
 ## Start
 
