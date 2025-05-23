@@ -3,9 +3,36 @@ mod module;
 
 use proc_macro::TokenStream;
 
-#[proc_macro_derive(Module, attributes(route, get, post, put, delete))]
-pub fn module_derive(input: TokenStream) -> TokenStream {
-    module::derive(input.into()).into()
+// Module related
+#[proc_macro_attribute]
+pub fn module(args: TokenStream, input: TokenStream) -> TokenStream {
+    module::derive_module(args.into(), input.into()).into()
+}
+
+#[proc_macro_attribute]
+pub fn interface(_: TokenStream, input: TokenStream) -> TokenStream {
+    module::derive_interface(input.into()).into()
+}
+
+// HTTP related
+#[proc_macro_attribute]
+pub fn get(args: TokenStream, input: TokenStream) -> TokenStream {
+    http::derive_get(args.into(), input.into()).into()
+}
+
+#[proc_macro_attribute]
+pub fn post(args: TokenStream, input: TokenStream) -> TokenStream {
+    http::derive_post(args.into(), input.into()).into()
+}
+
+#[proc_macro_attribute]
+pub fn put(args: TokenStream, input: TokenStream) -> TokenStream {
+    http::derive_put(args.into(), input.into()).into()
+}
+
+#[proc_macro_attribute]
+pub fn delete(args: TokenStream, input: TokenStream) -> TokenStream {
+    http::derive_delete(args.into(), input.into()).into()
 }
 
 #[proc_macro_attribute]
