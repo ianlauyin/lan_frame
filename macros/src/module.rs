@@ -1,30 +1,24 @@
 use proc_macro2::TokenStream;
 use quote::quote;
 use syn::{
-    Attribute, DeriveInput, Expr, ExprPath, Ident, Lit, LitStr, Token, punctuated::Punctuated,
+    Attribute, DeriveInput, Expr, ExprLit, Ident, Lit, LitStr, Token, parse2,
+    punctuated::Punctuated,
 };
 
 struct ModuleAttr<'a> {
     module: &'a Ident,
-    route: Option<String>,
-    method_handlers: Vec<MethodHandler<'a>>,
+    route: Option<TokenStream>,
+    sub_routes: Vec<TokenStream>,
 }
-
-struct MethodHandler<'a> {
-    method: &'a Ident,
-    route: LitStr,
-    handler: ExprPath,
-}
-
 // TODO: Add db helper
 pub fn derive(input: TokenStream) -> TokenStream {
-    let ast: DeriveInput = syn::parse2(input).unwrap();
+    let ast: DeriveInput = parse2(input).unwrap();
     let module = &ast.ident;
 
     let mut module_attr = ModuleAttr {
         module,
         route: None,
-        method_handlers: Vec::new(),
+        sub_routes: Vec::new(),
     };
 
     for attr in ast.attrs.iter() {
@@ -35,22 +29,26 @@ pub fn derive(input: TokenStream) -> TokenStream {
 
         if let Some(ident) = attr.path().get_ident() {
             if ["get", "post", "put", "delete"].contains(&ident.to_string().as_str()) {
-                module_attr.method_handlers.push(parse_method(attr, &ident));
+                module_attr
+                    .sub_routes
+                    .push(parse_method(&module, attr, &ident));
             }
         }
     }
 
-    parse_attributes(module_attr)
+    get_parsed_tokens(module_attr)
 }
 
-fn parse_route(attr: &Attribute) -> String {
+// Route
+fn parse_route(attr: &Attribute) -> TokenStream {
     let Ok(lit) = attr.parse_args::<LitStr>() else {
         panic!("route must be string")
     };
-    lit.value()
+    quote!(#lit)
 }
 
-fn parse_method<'a>(attr: &Attribute, method: &'a Ident) -> MethodHandler<'a> {
+// MethodHandler
+fn parse_method(module: &Ident, attr: &Attribute, method: &Ident) -> TokenStream {
     let punctuated = attr
         .parse_args_with(Punctuated::<Expr, Token![,]>::parse_terminated)
         .unwrap();
@@ -59,32 +57,45 @@ fn parse_method<'a>(attr: &Attribute, method: &'a Ident) -> MethodHandler<'a> {
     let Some(route_expr) = punctuated_iter.next() else {
         panic!("route is missing")
     };
-    let Expr::Lit(route_lit) = route_expr else {
-        panic!("route must be literal")
-    };
-    let Lit::Str(route) = route_lit.lit else {
-        panic!("route must be string literal")
-    };
-
     let Some(handler_expr) = punctuated_iter.next() else {
         panic!("handler is missing")
     };
-    let Expr::Path(handler) = handler_expr else {
-        panic!("handler must be path")
-    };
 
-    MethodHandler {
-        method,
-        route,
-        handler,
+    check_route(&route_expr);
+    check_handler(&handler_expr);
+    quote! {
+        .route(#route_expr, lan_frame::axum::routing::#method(#module::#handler_expr))
     }
 }
 
-// TODO: Update method handler here
-fn parse_attributes(module_attr: ModuleAttr) -> TokenStream {
+fn check_route(route_expr: &Expr) {
+    let Expr::Lit(ExprLit {
+        lit: Lit::Str(_), ..
+    }) = route_expr
+    else {
+        panic!("route must be string literal")
+    };
+}
+
+fn check_handler(handler_expr: &Expr) {
+    let Expr::Path(expr_path) = handler_expr else {
+        panic!("handler must be literal")
+    };
+    if expr_path.path.segments.len() != 1 {
+        panic!("handler must be literal")
+    }
+}
+
+fn get_parsed_tokens(module_attr: ModuleAttr) -> TokenStream {
     let module = module_attr.module;
     let name = &module.to_string();
-    let route = module_attr.route.unwrap_or("/".to_string());
+    let route = module_attr.route.unwrap_or(quote! {"/"});
+    let sub_routes = module_attr
+        .sub_routes
+        .iter()
+        .fold(TokenStream::new(), |acc, sub_route| {
+            quote! {#acc #sub_route}
+        });
 
     quote! {
         impl Module for #module {
@@ -97,7 +108,7 @@ fn parse_attributes(module_attr: ModuleAttr) -> TokenStream {
             }
 
             fn router(&self) -> lan_frame::axum::Router {
-                lan_frame::axum::Router::new()
+                lan_frame::axum::Router::new()#sub_routes
             }
         }
     }
