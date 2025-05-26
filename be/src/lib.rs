@@ -15,3 +15,4 @@ pub use refinery;
 // TODO: add a custom result type for lan_frame and remove all unwrap
 // TODO: add lazylock logger
 // TODO: update all reexport
+// TODO: Update all docs

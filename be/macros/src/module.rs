@@ -1,74 +1,42 @@
 use proc_macro2::TokenStream;
 use quote::quote;
-use syn::{
-    Data, DeriveInput, Field, Fields, FieldsNamed, parse::Parser, parse2, punctuated::Punctuated,
-    token::Brace,
-};
+use syn::{DeriveInput, ItemTrait, parse2};
 
-// TODO: Remove _add_route and routers field, Add get_all route in interface for self.router()
-// TODO: Use derive instead of attrribute for Module and interface
 pub fn derive_module(input: TokenStream) -> TokenStream {
-    let mut ast: DeriveInput = parse2(input).unwrap();
-    add_router(&mut ast);
-    let impl_module = get_impl_module(&ast);
-
-    quote! {
-        #ast
-        #impl_module
-    }
-}
-
-fn add_router(ast: &mut DeriveInput) {
-    let Data::Struct(data_struct) = &mut ast.data else {
-        panic!("Module must be a struct");
-    };
-    let new_field_token = quote! {_router: lan_be_frame::axum::Router};
-    let new_field = Field::parse_named.parse2(new_field_token).unwrap();
-
-    match &mut data_struct.fields {
-        Fields::Named(fields) => {
-            fields.named.push(new_field);
-        }
-        Fields::Unit => {
-            data_struct.fields = Fields::Named(FieldsNamed {
-                brace_token: Brace::default(),
-                named: Punctuated::from_iter(vec![new_field]),
-            });
-        }
-        Fields::Unnamed(_) => panic!("Module must have unnamed fields"),
-    };
-}
-
-fn get_impl_module(ast: &DeriveInput) -> TokenStream {
+    let ast: DeriveInput = parse2(input).unwrap();
     let module = &ast.ident;
     let name = &module.to_string();
     quote!(
-        impl #module {
-            pub fn new() -> Self {
-                Self {
-                    _router: lan_be_frame::axum::Router::new(),
-                }
-            }
-        }
-
         impl lan_be_frame::module::Module for #module {
             fn _name(&self) -> &str {
                 #name
             }
 
-            fn _add_route(&mut self, route: &str, handler: lan_be_frame::axum::routing::MethodRouter) {
-                self._router = self._router.clone().route(route, handler);
-            }
-
             fn _router(&self) -> lan_be_frame::axum::Router {
-                self._router.clone()
+                let mut router = lan_be_frame::axum::Router::new();
+                for route in self._get_all_routes() {
+                    router = router.route(&route.0, route.1);
+                }
+                router
             }
         }
     )
 }
 
+// TODO: Update get all internal handler function
 pub fn derive_interface(input: TokenStream) -> TokenStream {
-    todo!()
+    let ast: ItemTrait = parse2(input).unwrap();
+    let module = &ast.ident;
+
+    quote! {
+        use lan_be_frame::module::Interface;
+
+        impl Interface for #module {
+            fn _get_all_routes(&self) -> Vec<(String, lan_be_frame::axum::routing::MethodRouter)> {
+                vec![]
+            }
+        }
+    }
 }
 
 // struct ModuleAttr<'a> {
