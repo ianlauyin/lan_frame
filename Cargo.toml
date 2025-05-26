@@ -1,16 +1,3 @@
-[package]
-name = "lan_frame"
-version = "0.1.0"
-edition = "2024"
-
 [workspace]
 members = ["backend", "backend/macros", "frontend"]
 
-[features]
-default = ["backend", "frontend"]
-backend = ["lan_be_frame"]
-frontend = ["lan_fe_frame"]
-
-[dependencies]
-lan_be_frame = { path = "backend", optional = true }
-lan_fe_frame = { path = "frontend", optional = true }

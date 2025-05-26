@@ -1332,14 +1332,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "lan_frame"
-version = "0.1.0"
-dependencies = [
- "lan_be_frame",
- "lan_fe_frame",
-]
-
-[[package]]
 name = "lazy-js-bundle"
 version = "0.6.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"

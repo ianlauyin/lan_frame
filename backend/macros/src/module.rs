@@ -22,7 +22,7 @@ fn add_router(ast: &mut DeriveInput) {
     let Data::Struct(data_struct) = &mut ast.data else {
         panic!("Module must be a struct");
     };
-    let new_field_token = quote! {_router: lan_frame::be::axum::Router};
+    let new_field_token = quote! {_router: lan_be_frame::axum::Router};
     let new_field = Field::parse_named.parse2(new_field_token).unwrap();
 
     match &mut data_struct.fields {
@@ -46,21 +46,21 @@ fn get_impl_module(ast: &DeriveInput) -> TokenStream {
         impl #module {
             pub fn new() -> Self {
                 Self {
-                    _router: lan_frame::be::axum::Router::new(),
+                    _router: lan_be_frame::axum::Router::new(),
                 }
             }
         }
 
-        impl lan_frame::be::module::Module for #module {
+        impl lan_be_frame::module::Module for #module {
             fn _name(&self) -> &str {
                 #name
             }
 
-            fn _add_route(&mut self, route: &str, handler: lan_frame::be::axum::routing::MethodRouter) {
+            fn _add_route(&mut self, route: &str, handler: lan_be_frame::axum::routing::MethodRouter) {
                 self._router = self._router.clone().route(route, handler);
             }
 
-            fn _router(&self) -> lan_frame::be::axum::Router {
+            fn _router(&self) -> lan_be_frame::axum::Router {
                 self._router.clone()
             }
         }
