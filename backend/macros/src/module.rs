@@ -5,6 +5,8 @@ use syn::{
     token::Brace,
 };
 
+// TODO: Remove _add_route and routers field, Add get_all route in interface for self.router()
+// TODO: Use derive instead of attrribute for Module and interface
 pub fn derive_module(input: TokenStream) -> TokenStream {
     let mut ast: DeriveInput = parse2(input).unwrap();
     add_router(&mut ast);

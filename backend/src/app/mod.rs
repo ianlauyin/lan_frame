@@ -51,6 +51,7 @@ impl App {
         self.db_pool = Some(pool);
     }
 
+    // TODO: use async for adding module
     #[doc(hidden)]
     pub fn _internal_add_module(&mut self, module: Box<dyn Module>) {
         let name = module._name().to_string();
