@@ -1,6 +1,6 @@
 use axum::{Router, routing::MethodRouter};
 
-pub use lan_frame_macros::{interface, module};
+pub use lan_be_frame_macros::{interface, module};
 
 pub trait Module {
     fn _name(&self) -> &str;

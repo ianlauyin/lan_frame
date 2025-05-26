@@ -3,13 +3,14 @@ name = "lan_frame"
 version = "0.1.0"
 edition = "2024"
 
-[dependencies]
-lan_frame_macros = { path = "macros" }
-tokio = { version = "1.45.0", features = ["full"] }
-listenfd = "1.0.2"
-axum = "0.8.4"
-mysql = "26.0.0"
-refinery = {version = "0.8.16", features = ["mysql"]}
-
 [workspace]
-members = ["macros"]
+members = ["backend", "backend/macros", "frontend"]
+
+[features]
+default = ["backend", "frontend"]
+backend = ["lan_be_frame"]
+frontend = ["lan_fe_frame"]
+
+[dependencies]
+lan_be_frame = { path = "backend", optional = true }
+lan_fe_frame = { path = "frontend", optional = true }

@@ -1,14 +1,6 @@
-mod app;
+// TODO: Add a lib for combining be and fe, and add features for that
 
-pub mod db;
-pub mod http;
-pub mod module;
-
-pub use app::App;
-pub use axum;
-pub use mysql;
-pub use refinery::embed_migrations;
-pub use tokio;
-
-// TODO: add a custom result type for lan_frame and remove all unwrap
-// TODO: add lazylock logger
+#[cfg(feature = "backend")]
+pub use lan_be_frame as be;
+#[cfg(feature = "frontend")]
+pub use lan_fe_frame as fe;
