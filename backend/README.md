@@ -1,6 +1,6 @@
 # lan_be_frame
 
-A Backend framework using for myself
+A Backend framework for myself
 
 ## Require Dependancy
 
