@@ -14,7 +14,7 @@ macro_rules! add_db {
 
     ($app:expr , $info:expr, $migration_folder:literal) => {{
         let pool = lan_frame::be::db::_internal_get_pool($info);
-        lan_frame::be::embed_migrations!($migration_folder);
+        lan_frame::be::refinery::embed_migrations!($migration_folder);
         lan_frame::be::db::_internal_migrate(&pool, migrations::runner());
         $app._internal_add_db(pool);
     }};
