@@ -10,5 +10,5 @@ pub trait Module {
 }
 
 pub trait Interface {
-    fn _get_all_routes(&self) -> Vec<(String, MethodRouter)>;
+    fn _get_all_routes(&self) -> Vec<(&str, MethodRouter)>;
 }

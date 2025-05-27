@@ -1,27 +1,9 @@
-use proc_macro2::{Ident, Span, TokenStream};
-use quote::quote;
-use syn::{DeriveInput, parse2};
+use proc_macro2::TokenStream;
 
-pub fn derive_get(args: TokenStream, input: TokenStream) -> TokenStream {
+pub fn derive_request(_: TokenStream) -> TokenStream {
     todo!()
 }
 
-pub fn derive_post(args: TokenStream, input: TokenStream) -> TokenStream {
-    todo!()
-}
-
-pub fn derive_put(args: TokenStream, input: TokenStream) -> TokenStream {
-    todo!()
-}
-
-pub fn derive_delete(args: TokenStream, input: TokenStream) -> TokenStream {
-    todo!()
-}
-
-pub fn derive_request(input: TokenStream) -> TokenStream {
-    todo!()
-}
-
-pub fn derive_response(input: TokenStream) -> TokenStream {
+pub fn derive_response(_: TokenStream) -> TokenStream {
     todo!()
 }

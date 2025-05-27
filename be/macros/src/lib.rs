@@ -16,26 +16,6 @@ pub fn interface(_: TokenStream, input: TokenStream) -> TokenStream {
 
 // HTTP related
 #[proc_macro_attribute]
-pub fn get(args: TokenStream, input: TokenStream) -> TokenStream {
-    http::derive_get(args.into(), input.into()).into()
-}
-
-#[proc_macro_attribute]
-pub fn post(args: TokenStream, input: TokenStream) -> TokenStream {
-    http::derive_post(args.into(), input.into()).into()
-}
-
-#[proc_macro_attribute]
-pub fn put(args: TokenStream, input: TokenStream) -> TokenStream {
-    http::derive_put(args.into(), input.into()).into()
-}
-
-#[proc_macro_attribute]
-pub fn delete(args: TokenStream, input: TokenStream) -> TokenStream {
-    http::derive_delete(args.into(), input.into()).into()
-}
-
-#[proc_macro_attribute]
 pub fn request(_: TokenStream, input: TokenStream) -> TokenStream {
     http::derive_request(input.into()).into()
 }
