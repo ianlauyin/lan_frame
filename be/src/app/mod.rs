@@ -10,6 +10,7 @@ use crate::module::Module;
 
 pub struct App {
     modules: HashMap<String, Box<dyn Module>>,
+    // TODO: Seperate DB from App
     db_pool: Option<Pool>,
 }
 
@@ -26,6 +27,7 @@ impl App {
         let tcp_listener = Self::tcp_listener().await;
         let mut router = Router::new().with_state(self.db_pool.clone());
 
+        // TODO: use async for adding module
         for module in self.modules.values() {
             router = router.nest("/", module._router());
         }
@@ -51,7 +53,6 @@ impl App {
         self.db_pool = Some(pool);
     }
 
-    // TODO: use async for adding module
     #[doc(hidden)]
     pub fn _internal_add_module(&mut self, module: Box<dyn Module>) {
         let name = module._name().to_string();
