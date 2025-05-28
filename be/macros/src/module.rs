@@ -1,6 +1,6 @@
 use proc_macro2::TokenStream;
 use quote::quote;
-use syn::{DeriveInput, Ident, ItemTrait, TraitItem, TraitItemFn, parse2};
+use syn::{DeriveInput, ItemTrait, TraitItem, TraitItemFn, parse2};
 
 pub fn derive_module(input: TokenStream) -> TokenStream {
     let ast: DeriveInput = parse2(input).unwrap();
@@ -26,39 +26,25 @@ pub fn derive_module(input: TokenStream) -> TokenStream {
 pub fn derive_interface(input: TokenStream) -> TokenStream {
     let ast: ItemTrait = parse2(input).unwrap();
     let module = &ast.ident;
-    let parsed_fns = parse_fns(&ast);
-    let (route_tokens, internal_fn_tokens): (Vec<TokenStream>, Vec<TokenStream>) = parsed_fns
-        .into_iter()
-        .map(|parsed_fn| (parsed_fn.route_tokens, parsed_fn.internal_fn_tokens))
-        .unzip();
+    let all_route_tokens = all_route_tokens(&ast);
 
     quote! {
         use lan_be_frame::module::Interface;
-
         impl Interface for #module {
             fn _get_all_routes(&self) -> Vec<(&str, lan_be_frame::axum::routing::MethodRouter)> {
-                vec![#(#route_tokens),*]
+                vec![#(#all_route_tokens),*]
             }
-        }
-
-        impl #module{
-            #(#internal_fn_tokens)*
         }
     }
 }
 
-struct ParsedFn {
-    route_tokens: TokenStream,
-    internal_fn_tokens: TokenStream,
-}
-
-fn parse_fns(item_trait: &ItemTrait) -> Vec<ParsedFn> {
+fn all_route_tokens(item_trait: &ItemTrait) -> Vec<TokenStream> {
     item_trait
         .items
         .iter()
         .map(|item| {
             if let TraitItem::Fn(trait_fn) = item {
-                parse_fn(&trait_fn)
+                route_tokens(&trait_fn)
             } else {
                 panic!("Unknown Token Found in Trait Fn: {:?}", item);
             }
@@ -66,7 +52,7 @@ fn parse_fns(item_trait: &ItemTrait) -> Vec<ParsedFn> {
         .collect()
 }
 
-fn parse_fn(trait_fn: &TraitItemFn) -> ParsedFn {
+fn route_tokens(trait_fn: &TraitItemFn) -> TokenStream {
     let fn_name = &trait_fn.sig.ident;
     let Some(attr) = trait_fn.attrs.first() else {
         panic!("Method attribute is missing for fn: {}", fn_name);
@@ -92,17 +78,7 @@ fn parse_fn(trait_fn: &TraitItemFn) -> ParsedFn {
         panic!("route must be string literal for fn: {}", fn_name);
     };
 
-    let internal_name = format!("_{}", fn_name);
-    let internal_fn = Ident::new(&internal_name, fn_name.span());
     let route_str = route.value();
 
-    // TODO: update handler and add a transformer in the internal fn transform handler into internal fn
-    ParsedFn {
-        route_tokens: quote! {(#route_str,#prefix(Self::#internal_fn))},
-        internal_fn_tokens: quote! {
-            async fn #internal_fn() -> &'static str {
-                "Hello World!"
-            }
-        },
-    }
+    quote! {(#route_str,#prefix(Self::#fn_name))}
 }

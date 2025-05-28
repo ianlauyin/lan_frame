@@ -15,13 +15,13 @@ pub fn interface(_: TokenStream, input: TokenStream) -> TokenStream {
 }
 
 // HTTP related
-#[proc_macro_attribute]
-pub fn request(_: TokenStream, input: TokenStream) -> TokenStream {
+#[proc_macro_derive(Request)]
+pub fn request(input: TokenStream) -> TokenStream {
     http::derive_request(input.into()).into()
 }
 
-#[proc_macro_attribute]
-pub fn response(_: TokenStream, input: TokenStream) -> TokenStream {
+#[proc_macro_derive(Response)]
+pub fn response(input: TokenStream) -> TokenStream {
     http::derive_response(input.into()).into()
 }
 
