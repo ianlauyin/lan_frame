@@ -2,6 +2,7 @@ use proc_macro2::TokenStream;
 use quote::quote;
 use syn::{DeriveInput, parse2};
 
+// TODO: Create a new trait to super trait the FromRequest, And add QueryParams supports for from_request
 pub fn derive_request(input: TokenStream) -> TokenStream {
     let ast: DeriveInput = parse2(input).unwrap();
     let req_name = &ast.ident;
@@ -22,6 +23,7 @@ pub fn derive_request(input: TokenStream) -> TokenStream {
     }
 }
 
+// TODO: Create a new trait to super trait the IntoResponse
 pub fn derive_response(input: TokenStream) -> TokenStream {
     let ast: DeriveInput = parse2(input).unwrap();
     let res_name = &ast.ident;

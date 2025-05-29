@@ -1,8 +1,4 @@
 use mysql::{OptsBuilder, Pool};
-
-#[cfg(feature = "refinery")]
-use refinery::Runner;
-
 pub struct DBConnectInfo<'a> {
     pub url: &'a str,
     pub user: &'a str,
@@ -21,8 +17,7 @@ pub fn _internal_get_pool(info: DBConnectInfo) -> Pool {
     pool
 }
 
-#[cfg(feature = "refinery")]
-pub fn _internal_migrate(pool: &Pool, runner: Runner) {
+pub fn _internal_migrate(pool: &Pool, runner: refinery::Runner) {
     let mut conn = pool.get_conn().expect("Failed to get connection");
     match runner.run(&mut conn) {
         Ok(report) => {

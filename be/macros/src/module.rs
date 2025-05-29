@@ -2,6 +2,7 @@ use proc_macro2::TokenStream;
 use quote::quote;
 use syn::{DeriveInput, ItemTrait, TraitItem, TraitItemFn, parse2};
 
+// TODO:
 pub fn derive_module(input: TokenStream) -> TokenStream {
     let ast: DeriveInput = parse2(input).unwrap();
     let module = &ast.ident;
@@ -10,14 +11,6 @@ pub fn derive_module(input: TokenStream) -> TokenStream {
         impl lan_be_frame::module::Module for #module {
             fn _name(&self) -> &str {
                 #name
-            }
-
-            fn _router(&self) -> lan_be_frame::axum::Router {
-                let mut router = lan_be_frame::axum::Router::new();
-                for route in self._get_all_routes() {
-                    router = router.route(&route.0, route.1);
-                }
-                router
             }
         }
     )
