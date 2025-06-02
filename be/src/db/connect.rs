@@ -1,5 +1,20 @@
 use mysql::{OptsBuilder, Pool};
 
+#[macro_export]
+macro_rules! db_init {
+    ($info:expr) => {
+        let pool = lan_be_frame::db::get_pool($info);
+        lan_be_frame::db::LAZY_DB.update_pool(pool);
+    };
+
+    ($info:expr, $migration_folder:literal) => {
+        let pool = lan_be_frame::db::get_pool($info);
+        refinery::embed_migrations!($migration_folder);
+        lan_be_frame::db::migrate(&pool, migrations::runner());
+        lan_be_frame::db::LAZY_DB.update_pool(pool);
+    };
+}
+
 pub struct DBConnectInfo<'a> {
     pub url: &'a str,
     pub user: &'a str,
