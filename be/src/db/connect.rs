@@ -1,4 +1,5 @@
 use mysql::{OptsBuilder, Pool};
+
 pub struct DBConnectInfo<'a> {
     pub url: &'a str,
     pub user: &'a str,
@@ -6,7 +7,7 @@ pub struct DBConnectInfo<'a> {
     pub schema_name: &'a str,
 }
 
-pub fn _internal_get_pool(info: DBConnectInfo) -> Pool {
+pub fn get_pool(info: DBConnectInfo) -> Pool {
     let opts = OptsBuilder::new()
         .ip_or_hostname(Some(info.url))
         .user(Some(info.user))
@@ -17,7 +18,7 @@ pub fn _internal_get_pool(info: DBConnectInfo) -> Pool {
     pool
 }
 
-pub fn _internal_migrate(pool: &Pool, runner: refinery::Runner) {
+pub fn migrate(pool: &Pool, runner: refinery::Runner) {
     let mut conn = pool.get_conn().expect("Failed to get connection");
     match runner.run(&mut conn) {
         Ok(report) => {

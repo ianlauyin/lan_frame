@@ -1,6 +1,6 @@
 mod app;
 
-// pub mod db;
+pub mod db;
 pub mod http;
 pub mod module;
 
