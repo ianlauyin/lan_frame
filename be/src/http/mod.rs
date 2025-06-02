@@ -1,5 +1,4 @@
-mod request;
-mod response;
+mod rejection;
 
-pub use request::*;
-pub use response::*;
+pub use lan_be_frame_macros::{Request, Response};
+pub use rejection::*;
