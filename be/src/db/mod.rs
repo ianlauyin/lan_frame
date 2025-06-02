@@ -1,18 +1,17 @@
 mod connect;
-mod repository;
+mod table;
 
 use mysql::Pool;
 use std::sync::LazyLock;
 use tokio::sync::Mutex;
 
 pub use connect::*;
-// pub use repository::*;
+pub use table::*;
 
-pub static LAZY_DB: LazyLock<DB> = LazyLock::new(|| DB { pool: None });
+pub static LAZY_DB: LazyLock<Mutex<DB>> = LazyLock::new(|| Mutex::new(DB { pool: None }));
 
-#[derive(Debug)]
 pub struct DB {
-    pool: Option<Mutex<Pool>>,
+    pool: Option<Pool>,
 }
 
 impl DB {
@@ -20,6 +19,14 @@ impl DB {
         if self.pool.is_some() {
             panic!("DB pool already set");
         }
-        self.pool = Some(Mutex::new(pool));
+        self.pool = Some(pool);
+    }
+
+    pub fn get_pool(&self) -> &Pool {
+        if let Some(pool) = &self.pool {
+            pool
+        } else {
+            panic!("DB pool not set");
+        }
     }
 }

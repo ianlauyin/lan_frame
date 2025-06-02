@@ -1,3 +1,4 @@
+mod db;
 mod http;
 mod module;
 
@@ -25,4 +26,13 @@ pub fn response(input: TokenStream) -> TokenStream {
     http::derive_response(input.into()).into()
 }
 
-// TODO: DB Related
+// DB Related
+#[proc_macro_derive(Row)]
+pub fn row(input: TokenStream) -> TokenStream {
+    db::derive_row(input.into()).into()
+}
+
+// #[proc_macro_derive(Table, attributes(name, data))]
+// pub fn table(input: TokenStream) -> TokenStream {
+//     db::derive_table(input.into()).into()
+// }
