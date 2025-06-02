@@ -32,7 +32,7 @@ pub fn row(input: TokenStream) -> TokenStream {
     db::derive_row(input.into()).into()
 }
 
-// #[proc_macro_derive(Table, attributes(name, data))]
-// pub fn table(input: TokenStream) -> TokenStream {
-//     db::derive_table(input.into()).into()
-// }
+#[proc_macro_derive(Table, attributes(meta, row))]
+pub fn table(input: TokenStream) -> TokenStream {
+    db::derive_table(input.into()).into()
+}
