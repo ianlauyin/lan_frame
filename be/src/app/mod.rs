@@ -1,8 +1,5 @@
-mod macros;
-
 use axum::Router;
 use listenfd::ListenFd;
-use mysql::Pool;
 use std::collections::HashMap;
 use tokio::net::TcpListener;
 
@@ -10,22 +7,19 @@ use crate::module::Module;
 
 pub struct App {
     modules: HashMap<String, Box<dyn Module>>,
-    // TODO: Seperate DB from App
-    db_pool: Option<Pool>,
 }
 
 impl App {
     pub fn new() -> App {
         Self {
             modules: HashMap::new(),
-            db_pool: None,
         }
     }
 
     /// Start the application
     pub async fn run(&mut self) {
         let tcp_listener = Self::tcp_listener().await;
-        let mut router = Router::new().with_state(self.db_pool.clone());
+        let mut router = Router::new();
 
         for module in self.modules.values() {
             router = router.merge(module._router());
@@ -47,17 +41,11 @@ impl App {
         TcpListener::bind("127.0.0.1:8000").await.unwrap()
     }
 
-    #[doc(hidden)]
-    pub fn _internal_add_db(&mut self, pool: Pool) {
-        self.db_pool = Some(pool);
-    }
-
-    #[doc(hidden)]
-    pub fn _internal_add_module(&mut self, module: Box<dyn Module>) {
+    pub fn add_module(&mut self, module: impl Module) {
         let name = module._name().to_string();
         if self.modules.contains_key(&name) {
             panic!("Module {} already exists", name);
         }
-        self.modules.insert(name, module);
+        self.modules.insert(name, Box::new(module));
     }
 }

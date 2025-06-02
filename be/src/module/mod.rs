@@ -7,7 +7,7 @@ pub trait Interface {
     fn _get_all_routes(&self) -> Vec<(&str, MethodRouter)>;
 }
 
-pub trait Module: Interface {
+pub trait Module: Interface + 'static {
     fn _name(&self) -> &str;
     fn _router(&self) -> Router {
         let mut router = Router::new();
