@@ -1,1 +1,5 @@
-pub use lan_be_frame_macros::{Request, Response};
+mod request;
+mod response;
+
+pub use request::*;
+pub use response::*;
