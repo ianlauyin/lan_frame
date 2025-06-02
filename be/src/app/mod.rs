@@ -27,9 +27,8 @@ impl App {
         let tcp_listener = Self::tcp_listener().await;
         let mut router = Router::new().with_state(self.db_pool.clone());
 
-        // TODO: use async for adding module
         for module in self.modules.values() {
-            router = router.nest("/", module._router());
+            router = router.merge(module._router());
         }
 
         println!("Listening on {}", tcp_listener.local_addr().unwrap());

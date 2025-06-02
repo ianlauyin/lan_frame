@@ -2,7 +2,6 @@ use proc_macro2::TokenStream;
 use quote::quote;
 use syn::{DeriveInput, ItemTrait, TraitItem, TraitItemFn, parse2};
 
-// TODO:
 pub fn derive_module(input: TokenStream) -> TokenStream {
     let ast: DeriveInput = parse2(input).unwrap();
     let module = &ast.ident;
