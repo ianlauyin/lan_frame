@@ -1,29 +1,6 @@
 use proc_macro2::TokenStream;
 use quote::quote;
-use syn::{
-    Attribute, Data, DataStruct, DeriveInput, Expr, ExprAssign, ExprLit, ExprPath, Ident, Lit,
-    Path, parse2,
-};
-
-pub fn derive_row(input: TokenStream) -> TokenStream {
-    let ast: DeriveInput = parse2(input).unwrap();
-    let row = &ast.ident;
-    let Data::Struct(DataStruct { fields, .. }) = &ast.data else {
-        panic!("Row must be a struct");
-    };
-    let field_idents: Vec<&Ident> = fields
-        .iter()
-        .map(|field| field.ident.as_ref().unwrap())
-        .collect();
-    quote! {
-    impl lan_be_frame::mysql::prelude::FromRow for #row {
-            fn from_row_opt(row: lan_be_frame::mysql::Row) -> Result<Self, lan_be_frame::mysql::FromRowError> {
-                let (#(#field_idents),*) = lan_be_frame::mysql::from_row(row);
-                Ok(#row { #(#field_idents),* })
-            }
-        }
-    }
-}
+use syn::{Attribute, DeriveInput, Expr, ExprAssign, ExprLit, ExprPath, Lit, Path, parse2};
 
 pub fn derive_table(input: TokenStream) -> TokenStream {
     let ast: DeriveInput = parse2(input).unwrap();

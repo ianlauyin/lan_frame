@@ -7,6 +7,7 @@ pub struct UserTable;
 
 #[derive(Row)]
 pub struct User {
+    #[primary_key]
     id: i32,
     email: String,
 }

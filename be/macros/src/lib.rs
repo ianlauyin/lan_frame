@@ -37,7 +37,7 @@ pub fn path_params(input: TokenStream) -> TokenStream {
 }
 
 // DB Related
-#[proc_macro_derive(Row)]
+#[proc_macro_derive(Row, attributes(primary_key))]
 pub fn row(input: TokenStream) -> TokenStream {
     db::derive_row(input.into()).into()
 }
