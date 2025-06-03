@@ -1,0 +1,16 @@
+services:
+  db:
+    image: mysql
+    restart: always
+    environment:
+      MYSQL_DATABASE: "basic_example"
+      MYSQL_USER: "ian"
+      MYSQL_PASSWORD: "ian"
+      MYSQL_ROOT_PASSWORD: "ian"
+    ports:
+      - "3306:3306"
+    volumes:
+      - my-db:/var/lib/mysql
+
+volumes:
+  my-db:
