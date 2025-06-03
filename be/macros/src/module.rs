@@ -1,6 +1,6 @@
 use proc_macro2::TokenStream;
 use quote::quote;
-use syn::{DeriveInput, ItemTrait, TraitItem, TraitItemFn, parse2};
+use syn::{DeriveInput, ItemTrait, LitStr, TraitItem, TraitItemFn, parse2};
 
 pub fn derive_module(input: TokenStream) -> TokenStream {
     let ast: DeriveInput = parse2(input).unwrap();
@@ -46,9 +46,10 @@ fn all_route_tokens(item_trait: &ItemTrait) -> Vec<TokenStream> {
 
 fn route_tokens(trait_fn: &TraitItemFn) -> TokenStream {
     let fn_name = &trait_fn.sig.ident;
-    let Some(attr) = trait_fn.attrs.first() else {
-        panic!("Method attribute is missing for fn: {}", fn_name);
-    };
+    let attr = trait_fn
+        .attrs
+        .first()
+        .expect(&format!("Method attribute is missing for fn: {}", fn_name));
     let prefix = match attr.path().get_ident() {
         Some(ident) if ident == "get" => {
             quote!(lan_be_frame::axum::routing::get)
@@ -66,9 +67,9 @@ fn route_tokens(trait_fn: &TraitItemFn) -> TokenStream {
             panic!("Unknown Method attribute for fn: {}", fn_name);
         }
     };
-    let Ok(route) = attr.parse_args::<syn::LitStr>() else {
-        panic!("route must be string literal for fn: {}", fn_name);
-    };
+    let route: LitStr = attr
+        .parse_args()
+        .expect(&format!("route must be string literal for fn: {}", fn_name));
 
     let route_str = route.value();
 

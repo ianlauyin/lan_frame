@@ -1,14 +1,15 @@
 use proc_macro2::TokenStream;
 use quote::quote;
-use syn::{Attribute, DeriveInput, Expr, ExprAssign, ExprLit, ExprPath, Ident, Lit, Path, parse2};
+use syn::{
+    Attribute, Data, DataStruct, DeriveInput, Expr, ExprAssign, ExprLit, ExprPath, Ident, Lit,
+    Path, parse2,
+};
 
 pub fn derive_row(input: TokenStream) -> TokenStream {
     let ast: DeriveInput = parse2(input).unwrap();
     let row = &ast.ident;
-
-    let fields = match &ast.data {
-        syn::Data::Struct(data) => &data.fields,
-        _ => panic!("Row must be a struct"),
+    let Data::Struct(DataStruct { fields, .. }) = &ast.data else {
+        panic!("Row must be a struct");
     };
     let field_idents: Vec<&Ident> = fields
         .iter()
@@ -27,45 +28,46 @@ pub fn derive_row(input: TokenStream) -> TokenStream {
 pub fn derive_table(input: TokenStream) -> TokenStream {
     let ast: DeriveInput = parse2(input).unwrap();
     let table = &ast.ident;
-    let table_attr = derive_table_attr(&ast.attrs);
-    let table_name = table_attr.name.unwrap();
-    let table_row = table_attr.row.unwrap();
+    let TableAttr { name, row } = derive_table_attr(&ast.attrs);
 
     quote!(
-        impl lan_be_frame::db::Table<#table_row> for #table {
+        impl lan_be_frame::db::Table<#row> for #table {
             fn name(&self) -> &'static str {
-                #table_name
+                #name
             }
         }
     )
 }
 
 struct TableAttr {
-    name: Option<String>,
-    row: Option<Path>,
+    name: String,
+    row: Path,
 }
 
+impl TableAttr {
+    fn new(name_op: Option<String>, row_op: Option<Path>) -> Self {
+        let name = name_op.expect("name is missing");
+        let row = row_op.expect("row is missing");
+        Self { name, row }
+    }
+}
 fn derive_table_attr(attr: &Vec<Attribute>) -> TableAttr {
-    let mut table_attr = TableAttr {
-        name: None,
-        row: None,
-    };
+    let mut name_op = None;
+    let mut row_op = None;
+
     for attr in attr {
         if attr.path().is_ident("meta") {
-            table_attr.name = Some(derive_table_meta(attr));
+            name_op = Some(derive_table_meta(attr));
         }
         if attr.path().is_ident("row") {
-            table_attr.row = Some(derive_row_attr(attr));
+            row_op = Some(derive_row_attr(attr));
         }
     }
-    check_all_table_attr(&table_attr);
-    table_attr
+    TableAttr::new(name_op, row_op)
 }
 
 fn derive_table_meta(attr: &Attribute) -> String {
-    let Ok(expr_assign) = attr.parse_args::<ExprAssign>() else {
-        panic!("meta should be a ExprAssign");
-    };
+    let expr_assign: ExprAssign = attr.parse_args().expect("meta should be a ExprAssign");
     let Expr::Path(ExprPath { path, .. }) = *expr_assign.left else {
         panic!("meta left assignment should be a ExprPath");
     };
@@ -88,18 +90,7 @@ fn derive_table_meta(attr: &Attribute) -> String {
     }
 }
 
-fn derive_row_attr<'a>(attr: &Attribute) -> Path {
-    let Ok(path) = attr.parse_args::<Path>() else {
-        panic!("row should be a Path");
-    };
+fn derive_row_attr(attr: &Attribute) -> Path {
+    let path: Path = attr.parse_args().expect("row should be a Path");
     path.clone()
-}
-
-fn check_all_table_attr(table_attr: &TableAttr) {
-    if table_attr.name.is_none() {
-        panic!("meta is missing");
-    }
-    if table_attr.row.is_none() {
-        panic!("row is missing");
-    }
 }

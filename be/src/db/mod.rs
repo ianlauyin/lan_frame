@@ -21,12 +21,4 @@ impl DB {
         }
         self.pool = Some(pool);
     }
-
-    pub fn get_pool(&self) -> &Pool {
-        if let Some(pool) = &self.pool {
-            pool
-        } else {
-            panic!("DB pool not set");
-        }
-    }
 }
