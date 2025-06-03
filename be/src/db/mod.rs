@@ -10,21 +10,25 @@ pub use connect::*;
 pub use repository::*;
 pub use table::*;
 
-pub static LAZY_DB: LazyLock<Mutex<DB>> = LazyLock::new(|| Mutex::new(DB { pool: None }));
+pub static LAZY_DB: LazyLock<DB> = LazyLock::new(|| DB {
+    pool: Mutex::new(None),
+});
 
 pub struct DB {
-    pool: Option<Pool>,
+    pool: Mutex<Option<Pool>>,
 }
 
 impl DB {
-    pub fn update_pool(&mut self, pool: Pool) {
-        if self.pool.is_some() {
+    pub async fn update_pool(&self, pool: Pool) {
+        let mut pool_guard = self.pool.lock().await;
+        if pool_guard.is_some() {
             panic!("DB pool already set");
         }
-        self.pool = Some(pool);
+        *pool_guard = Some(pool);
     }
 
-    fn get_pool(&self) -> &Pool {
-        self.pool.as_ref().unwrap()
+    pub async fn get_pool(&self) -> Pool {
+        let pool_guard = self.pool.lock().await;
+        pool_guard.as_ref().expect("Pool not initialized").clone()
     }
 }
