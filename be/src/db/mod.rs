@@ -1,4 +1,5 @@
 mod connect;
+mod repository;
 mod table;
 
 use mysql::Pool;
@@ -6,6 +7,7 @@ use std::sync::LazyLock;
 use tokio::sync::Mutex;
 
 pub use connect::*;
+pub use repository::*;
 pub use table::*;
 
 pub static LAZY_DB: LazyLock<Mutex<DB>> = LazyLock::new(|| Mutex::new(DB { pool: None }));
@@ -20,5 +22,9 @@ impl DB {
             panic!("DB pool already set");
         }
         self.pool = Some(pool);
+    }
+
+    fn get_pool(&self) -> &Pool {
+        self.pool.as_ref().unwrap()
     }
 }

@@ -31,7 +31,8 @@ pub fn derive_table(input: TokenStream) -> TokenStream {
     let TableAttr { name, row } = derive_table_attr(&ast.attrs);
 
     quote!(
-        impl lan_be_frame::db::Table<#row> for #table {
+        impl lan_be_frame::db::Table for #table {
+            type Row = #row;
             fn name(&self) -> &'static str {
                 #name
             }
