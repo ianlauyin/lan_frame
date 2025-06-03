@@ -8,8 +8,8 @@ pub trait Interface {
 }
 
 pub trait Module: Interface + 'static {
-    fn _name(&self) -> &str;
-    fn _router(&self) -> Router {
+    fn name(&self) -> &str;
+    fn router(&self) -> Router {
         let mut router = Router::new();
         for route in self._get_all_routes() {
             router = router.route(&route.0, route.1);

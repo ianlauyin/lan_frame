@@ -10,7 +10,7 @@ pub fn derive_module(input: TokenStream) -> TokenStream {
     let name = &module.to_string();
     quote!(
         impl lan_be_frame::module::Module for #module {
-            fn _name(&self) -> &str {
+            fn name(&self) -> &str {
                 #name
             }
         }

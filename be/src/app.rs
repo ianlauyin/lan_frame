@@ -22,7 +22,7 @@ impl App {
         let mut router = Router::new();
 
         for module in self.modules.values() {
-            router = router.merge(module._router());
+            router = router.merge(module.router());
         }
 
         println!("Listening on {}", tcp_listener.local_addr().unwrap());
@@ -42,7 +42,7 @@ impl App {
     }
 
     pub fn add_module(&mut self, module: impl Module) {
-        let name = module._name().to_string();
+        let name = module.name().to_string();
         if self.modules.contains_key(&name) {
             panic!("Module {} already exists", name);
         }
