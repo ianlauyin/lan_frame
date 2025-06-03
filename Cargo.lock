@@ -1311,7 +1311,6 @@ dependencies = [
  "listenfd",
  "mysql",
  "refinery",
- "serde",
  "tokio",
 ]
 

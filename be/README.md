@@ -1,10 +1,6 @@
 # lan_be_frame
 
-A Backend framework for myself
-
-## Require Dependancy
-
-`serde`
+A Backend framework for myself using axum, mysql.
 
 ## Optional Dependancy
 

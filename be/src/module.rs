@@ -1,7 +1,7 @@
 use axum::{Router, routing::MethodRouter};
 
 /// You need the interface and Module have the same name
-pub use lan_be_frame_macros::{Module, interface};
+pub use lan_be_frame_macros::{Module, handler, interface};
 
 pub trait Interface {
     fn _get_all_routes(&self) -> Vec<(&str, MethodRouter)>;
