@@ -1,4 +1,9 @@
-use lan_be_frame::module::{Module, handler, interface};
+use lan_be_frame::{
+    db::Repository,
+    module::{Module, handler, interface},
+};
+
+use crate::db::table::users::{User, UserTable};
 
 mod create_user_info;
 mod get_user_info;
@@ -20,9 +25,11 @@ pub trait UserModule {
 #[handler]
 impl UserModule {
     async fn get_user_info(path_params: GetUserInfoPathParams) -> GetUserInfoResponse {
+        let user_repo = Repository::new(UserTable).await;
+        let user = user_repo.get(path_params.id).await;
         GetUserInfoResponse {
-            id: path_params.id,
-            email: "test@test.com".to_string(),
+            id: user.id,
+            email: user.email,
         }
     }
 

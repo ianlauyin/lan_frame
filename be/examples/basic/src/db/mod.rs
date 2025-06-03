@@ -1,6 +1,4 @@
-mod table;
-
-pub use table::users::UserTable;
+pub mod table;
 
 use lan_be_frame::db::DBConnectInfo;
 pub const DB_CONNECT_INFO: DBConnectInfo = DBConnectInfo {

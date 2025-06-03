@@ -1,8 +1,10 @@
-use mysql::PooledConn;
+use mysql::{PooledConn, prelude::FromRow};
 
 use crate::db::LAZY_DB;
 
-use super::Table;
+use super::{PrimaryKey, Table};
+
+pub type PKType<T> = <<T as Table>::Row as PrimaryKey>::PKType;
 
 pub struct Repository<T: Table> {
     table: T,
@@ -17,23 +19,23 @@ impl<T: Table> Repository<T> {
         }
     }
 
-    pub async fn get(&self) {
-        todo!("after primary key supports")
+    pub async fn get(&self, primary_key: PKType<T>) -> T::Row {
+        todo!()
+    }
+
+    pub async fn insert(&self, primary_key: PKType<T>) {
+        todo!()
+    }
+
+    pub async fn update(&self, primary_key: PKType<T>) {
+        todo!()
+    }
+
+    pub async fn delete(&self, primary_key: PKType<T>) {
+        todo!()
     }
 
     pub async fn select(&self) {
         todo!()
-    }
-
-    pub async fn insert(&self) {
-        todo!("after primary key supports")
-    }
-
-    pub async fn update(&self) {
-        todo!("after primary key supports")
-    }
-
-    pub async fn delete(&self) {
-        todo!("after primary key supports")
     }
 }
