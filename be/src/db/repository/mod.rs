@@ -1,4 +1,4 @@
-use mysql::{PooledConn, prelude::FromRow};
+use mysql::PooledConn;
 
 use crate::db::LAZY_DB;
 

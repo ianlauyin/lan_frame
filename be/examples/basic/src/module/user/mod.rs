@@ -3,13 +3,13 @@ use lan_be_frame::{
     module::{Module, handler, interface},
 };
 
-use crate::db::table::users::{User, UserTable};
-
 mod create_user_info;
 mod get_user_info;
 
 use create_user_info::*;
 use get_user_info::*;
+
+use crate::db::table::users::UserTable;
 
 #[derive(Module)]
 pub struct UserModule;
