@@ -1,41 +1,48 @@
-use mysql::PooledConn;
+use std::io::{Error, ErrorKind};
 
-use crate::db::LAZY_DB;
+use mysql::{PooledConn, prelude::Queryable};
 
-use super::{PrimaryKey, Table};
+use crate::db::{LAZY_DB, Optional, Row};
 
-pub type PKType<T> = <<T as Table>::Row as PrimaryKey>::PKType;
+use super::Table;
 
 pub struct Repository<T: Table> {
     table: T,
-    pooled_conn: PooledConn,
 }
 
 impl<T: Table> Repository<T> {
-    pub async fn new(table: T) -> Self {
-        Self {
-            table,
-            pooled_conn: LAZY_DB.get_pool().await.get_conn().unwrap(),
-        }
+    pub fn new(table: T) -> Self {
+        Self { table }
     }
 
-    pub async fn get(&self, primary_key: PKType<T>) -> T::Row {
+    pub async fn get(&self, primary_key: <T::Row as Row>::PKType) -> Result<T::Row, Error> {
+        let mut pooled_conn = self.get_pooled_conn().await;
+        let id_str = T::Row::pk();
+        let table_name = self.table.name();
+        let query = format!("SELECT * FROM {table_name} WHERE {id_str} = '{primary_key}'");
+        let row = pooled_conn
+            .query_first(query)
+            .map_err(|e| Error::new(ErrorKind::Other, e.to_string()))?;
+        row.ok_or_else(|| Error::new(ErrorKind::NotFound, "Record not found"))
+    }
+
+    pub async fn insert(&self, data: T::Row) {
         todo!()
     }
 
-    pub async fn insert(&self, primary_key: PKType<T>) {
+    pub async fn update(&self, optional_data: impl Optional<T::Row>) {
         todo!()
     }
 
-    pub async fn update(&self, primary_key: PKType<T>) {
+    pub async fn delete(&self) {
         todo!()
     }
 
-    pub async fn delete(&self, primary_key: PKType<T>) {
+    pub async fn select(&self) -> Vec<T::Row> {
         todo!()
     }
 
-    pub async fn select(&self) {
-        todo!()
+    async fn get_pooled_conn(&self) -> PooledConn {
+        LAZY_DB.get_pool().await.get_conn().unwrap()
     }
 }

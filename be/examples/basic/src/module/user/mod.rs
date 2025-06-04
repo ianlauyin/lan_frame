@@ -25,8 +25,8 @@ pub trait UserModule {
 #[handler]
 impl UserModule {
     async fn get_user_info(path_params: GetUserInfoPathParams) -> GetUserInfoResponse {
-        let user_repo = Repository::new(UserTable).await;
-        let user = user_repo.get(path_params.id).await;
+        let user_repo = Repository::new(UserTable);
+        let user = user_repo.get(path_params.id).await.unwrap();
         GetUserInfoResponse {
             id: user.id,
             email: user.email,

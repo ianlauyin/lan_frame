@@ -1,25 +1,28 @@
-use std::io::{Error, ErrorKind};
+use std::{
+    fmt::Display,
+    io::{Error, ErrorKind},
+};
 
-use mysql::{Row, prelude::FromRow};
+use mysql::prelude::FromRow;
 
 pub use lan_be_frame_macros::{Optional, Row, Table};
 
 pub trait Table {
-    type Row: FromRow + PrimaryKey;
+    type Row: Row;
     fn name(&self) -> &'static str;
-    fn row_mapper(&self) -> impl FnMut(Row) -> Self::Row {
+    fn row_mapper(&self) -> impl FnMut(mysql::Row) -> Self::Row {
         Self::Row::from_row
     }
 }
 
-pub trait Optional<Data> {
-    fn to_data(self) -> Result<Data, Error>;
+pub trait Row: FromRow {
+    type PKType: Display;
+    fn pk() -> &'static str;
+}
+
+pub trait Optional<Row> {
+    fn to_data(self) -> Result<Row, Error>;
     fn unwrap_data<T>(data: Option<T>) -> Result<T, Error> {
         data.ok_or_else(|| Error::new(ErrorKind::InvalidData, "Missing data"))
     }
-}
-
-pub trait PrimaryKey {
-    type PKType;
-    fn name(&self) -> &'static str;
 }

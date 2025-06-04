@@ -13,7 +13,7 @@ pub fn derive_row(input: TokenStream) -> TokenStream {
         field_idents,
     } = derive_fields(fields);
     let from_row_tokens = from_row_tokens(row, field_idents);
-    let primary_key_tokens = primary_key_tokens(row, primary_key);
+    let primary_key_tokens = row_tokens(row, primary_key);
     quote! {
         #from_row_tokens
         #primary_key_tokens
@@ -54,13 +54,13 @@ fn from_row_tokens(row: &Ident, field_idents: Vec<&Ident>) -> TokenStream {
     }
 }
 
-fn primary_key_tokens(row: &Ident, primary_key: &Field) -> TokenStream {
+fn row_tokens(row: &Ident, primary_key: &Field) -> TokenStream {
     let pk_type = &primary_key.ty;
     let pk_field = primary_key.ident.as_ref().unwrap().to_string();
     quote! {
-        impl lan_be_frame::db::PrimaryKey for #row {
+        impl lan_be_frame::db::Row for #row {
             type PKType = #pk_type;
-            fn name(&self) -> &'static str {
+            fn pk() -> &'static str {
                 #pk_field
             }
         }
