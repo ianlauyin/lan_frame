@@ -1,9 +1,6 @@
-use std::{
-    fmt::Display,
-    io::{Error, ErrorKind},
-};
+use std::io::{Error, ErrorKind};
 
-use mysql::prelude::FromRow;
+use mysql::{Value, prelude::FromRow};
 
 pub use lan_be_frame_macros::{Optional, Row, Table};
 
@@ -16,7 +13,7 @@ pub trait Table {
 }
 
 pub trait Row: FromRow {
-    type PKType: Display;
+    type PKType: Into<Value>;
     fn pk() -> &'static str;
 }
 
