@@ -25,7 +25,8 @@ impl<T: Table> Repository<T> {
 
     // Single Operation
     pub fn select_by_pk(&mut self, primary_key: <T::Row as Row>::PKType) -> Result<T::Row, Error> {
-        let stmt = self.pk_stmt("SELECT");
+        let pk_stmt_postfix = self.pk_stmt_postfix();
+        let stmt = format!("SELECT * FROM {pk_stmt_postfix}");
         let row = self
             .pooled_conn
             .exec_first(stmt, (primary_key,))
@@ -34,7 +35,8 @@ impl<T: Table> Repository<T> {
     }
 
     pub fn delete_by_pk(&mut self, primary_key: <T::Row as Row>::PKType) -> Result<(), Error> {
-        let stmt = self.pk_stmt("DELETE");
+        let pk_stmt_postfix = self.pk_stmt_postfix();
+        let stmt = format!("DELETE FROM {pk_stmt_postfix}");
         self.pooled_conn
             .exec_drop(stmt, (primary_key,))
             .map_err(|e| Error::new(ErrorKind::Other, e.to_string()))
@@ -70,9 +72,9 @@ impl<T: Table> Repository<T> {
         todo!()
     }
 
-    fn pk_stmt(&self, action: &str) -> String {
+    fn pk_stmt_postfix(&self) -> String {
         let id_str = T::Row::pk();
         let table_name = self.table.name();
-        format!("{action} FROM {table_name} WHERE {id_str} = ?")
+        format!("{table_name} WHERE {id_str} = ?")
     }
 }
