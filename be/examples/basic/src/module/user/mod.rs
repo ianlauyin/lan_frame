@@ -35,6 +35,6 @@ impl UserModule {
 
     async fn create_user_info(req: CreateUserInfoRequest) {
         let mut user_repo = Repository::new(UserTable).await;
-        user_repo.insert();
+        user_repo.insert_one(req.partial_user()).unwrap();
     }
 }

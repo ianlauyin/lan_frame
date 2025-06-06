@@ -90,34 +90,59 @@ fn partial_tokens(
         .into_iter()
         .filter(|(ident, _)| ident.to_string() != primary_key.ident.as_ref().unwrap().to_string())
         .collect();
-    let (partial_field_tokens, into_partial_field_tokens) = field_tokens(&filter_field_pairs);
+    let PartialAttr {
+        names,
+        field_tokens,
+        into_partial_tokens,
+        into_params_tokens,
+    } = field_tokens(filter_field_pairs);
     quote! {
         pub struct #partial_row_ident {
-            #(#partial_field_tokens),*
+            #(#field_tokens),*
         }
 
         impl Into<#partial_row_ident> for #row_ident {
             fn into(self) -> #partial_row_ident {
                 #partial_row_ident {
-                    #(#into_partial_field_tokens),*
+                    #(#into_partial_tokens),*
                 }
             }
         }
 
-        impl lan_be_frame::db::Partial for #partial_row_ident {
+        impl lan_be_frame::db::PartialRow for #partial_row_ident {
             type Row = #row_ident;
+            fn fields() -> Vec<String> {
+                vec![#(#names.to_string()),*]
+            }
+            fn into_params(self) -> impl Into<lan_be_frame::mysql::Params> {
+                (#(#into_params_tokens),*)
+            }
         }
     }
 }
 
-fn field_tokens(field_pairs: &Vec<(&Ident, &Type)>) -> (Vec<TokenStream>, Vec<TokenStream>) {
-    let mut partial_field_tokens = Vec::new();
-    let mut into_partial_field_tokens = Vec::new();
-    for (ident, ty) in field_pairs {
-        let partial_field_token = quote! (pub #ident: Option<#ty>);
-        let into_partial_field_token = quote! (#ident: Some(self.#ident));
-        partial_field_tokens.push(partial_field_token);
-        into_partial_field_tokens.push(into_partial_field_token);
+struct PartialAttr {
+    names: Vec<String>,
+    field_tokens: Vec<TokenStream>,
+    into_partial_tokens: Vec<TokenStream>,
+    into_params_tokens: Vec<TokenStream>,
+}
+
+fn field_tokens(field_pairs: Vec<(&Ident, &Type)>) -> PartialAttr {
+    let mut names = Vec::new();
+    let mut field_tokens = Vec::new();
+    let mut into_partial_tokens = Vec::new();
+    let mut into_params_tokens = Vec::new();
+    field_pairs.into_iter().for_each(|(ident, ty)| {
+        names.push(ident.to_string());
+        field_tokens.push(quote! (pub #ident: Option<#ty>));
+        into_partial_tokens.push(quote! (#ident : Some(self.#ident)));
+        into_params_tokens.push(quote! (self.#ident,));
+    });
+    PartialAttr {
+        names,
+        field_tokens,
+        into_partial_tokens,
+        into_params_tokens,
     }
-    (partial_field_tokens, into_partial_field_tokens)
 }
