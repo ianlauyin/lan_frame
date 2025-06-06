@@ -44,17 +44,30 @@ impl<T: Table> Repository<T> {
             .map_err(|e| Error::new(ErrorKind::Other, e.to_string()))
     }
 
-    pub fn insert_one(&mut self, partial_row: impl PartialRow<Row = T::Row>) -> Result<(), Error> {
+    pub fn insert_one<PR: PartialRow<Row = T::Row>>(
+        &mut self,
+        partial_row: PR,
+    ) -> Result<(), Error> {
         let table_name = self.table.name();
-        let fields = T::Row::fields().join(", ");
+        let fields = PR::fields().join(", ");
         let stmt = format!("INSERT INTO {table_name} ({fields}) VALUES (?)");
         self.pooled_conn
             .exec_drop(stmt, partial_row.into_params())
             .map_err(|e| Error::new(ErrorKind::Other, e.to_string()))
     }
 
-    pub fn update_one(&self, primary_key: <T::Row as Row>::PKType,) {
-        todo!()
+    pub fn update_one(
+        &mut self,
+        primary_key: <T::Row as Row>::PKType,
+        partial_row: impl PartialRow<Row = T::Row>,
+    ) {
+        let pk_stmt_postfix = self.pk_stmt_postfix();
+        let table_name = self.table.name();
+        let fields = T::Row::fields().join(", ");
+        let stmt = format!("UPDATE {table_name} SET {fields} {pk_stmt_postfix}");
+        self.pooled_conn
+            .exec_drop(stmt, partial_row.into_params())
+            .map_err(|e| Error::new(ErrorKind::Other, e.to_string()));
     }
 
     // Batch Operation

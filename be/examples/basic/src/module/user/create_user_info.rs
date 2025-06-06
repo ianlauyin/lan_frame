@@ -5,13 +5,13 @@ use crate::db::table::users::PartialUser;
 
 #[derive(Deserialize, Request)]
 pub struct CreateUserInfoRequest {
-    pub(super) a: String,
+    pub(super) email: String,
 }
 
 impl CreateUserInfoRequest {
     pub fn partial_user(self) -> PartialUser {
         PartialUser {
-            email: Some(self.a),
+            email: Some(self.email),
         }
     }
 }
