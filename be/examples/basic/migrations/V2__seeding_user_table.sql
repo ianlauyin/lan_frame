@@ -1,4 +1,3 @@
--- Seeding users table with sample data
 INSERT INTO users (email) VALUES 
     ('john.doe@example.com'),
     ('jane.smith@example.com'),
