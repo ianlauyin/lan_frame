@@ -115,7 +115,7 @@ fn partial_tokens(
                 vec![#(#names.to_string()),*]
             }
             fn into_params(self) -> impl Into<lan_be_frame::mysql::Params> {
-                (#(#into_params_tokens),*)
+                (#(#into_params_tokens)*)
             }
         }
     }

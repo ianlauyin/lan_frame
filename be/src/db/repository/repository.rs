@@ -58,16 +58,16 @@ impl<T: Table> Repository<T> {
 
     pub fn update_one(
         &mut self,
-        primary_key: <T::Row as Row>::PKType,
-        partial_row: impl PartialRow<Row = T::Row>,
+        // primary_key: <T::Row as Row>::PKType,
+        // partial_row: impl PartialRow<Row = T::Row>,
     ) {
-        let pk_stmt_postfix = self.pk_stmt_postfix();
-        let table_name = self.table.name();
-        let fields = T::Row::fields().join(", ");
-        let stmt = format!("UPDATE {table_name} SET {fields} {pk_stmt_postfix}");
-        self.pooled_conn
-            .exec_drop(stmt, partial_row.into_params())
-            .map_err(|e| Error::new(ErrorKind::Other, e.to_string()));
+        // let pk_stmt_postfix = self.pk_stmt_postfix();
+        // let table_name = self.table.name();
+        // let fields = T::Row::fields().join(", ");
+        // let stmt = format!("UPDATE {table_name} SET {fields} {pk_stmt_postfix}");
+        // self.pooled_conn
+        //     .exec_drop(stmt, partial_row.into_params())
+        //     .map_err(|e| Error::new(ErrorKind::Other, e.to_string()));
     }
 
     // Batch Operation
