@@ -19,21 +19,22 @@ pub trait UserModule {
     #[get("/user/info/{id}")]
     async fn get_user_info(path_params: GetUserInfoPathParams) -> GetUserInfoResponse;
     #[post("/user/info")]
-    async fn create_user_info(req: CreateUserInfoRequest) -> CreateUserInfoResponse;
+    async fn create_user_info(req: CreateUserInfoRequest);
 }
 
 #[handler]
 impl UserModule {
     async fn get_user_info(path_params: GetUserInfoPathParams) -> GetUserInfoResponse {
         let mut user_repo = Repository::new(UserTable).await;
-        let user = user_repo.get(path_params.id).await.unwrap();
+        let user = user_repo.select_by_pk(path_params.id).unwrap();
         GetUserInfoResponse {
             id: user.id,
             email: user.email,
         }
     }
 
-    async fn create_user_info(req: CreateUserInfoRequest) -> CreateUserInfoResponse {
-        CreateUserInfoResponse { b: req.a }
+    async fn create_user_info(req: CreateUserInfoRequest) {
+        let mut user_repo = Repository::new(UserTable).await;
+        user_repo.insert();
     }
 }

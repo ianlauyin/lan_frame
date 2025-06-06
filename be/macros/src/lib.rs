@@ -46,8 +46,3 @@ pub fn row(input: TokenStream) -> TokenStream {
 pub fn table(input: TokenStream) -> TokenStream {
     db::derive_table(input.into()).into()
 }
-
-#[proc_macro_derive(Optional)]
-pub fn optional(input: TokenStream) -> TokenStream {
-    db::derive_optional(input.into()).into()
-}
