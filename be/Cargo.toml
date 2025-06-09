@@ -5,10 +5,8 @@ edition = "2024"
 
 [dependencies]
 lan_be_frame_macros = { path = "macros" }
-refinery = { workspace = true}
 serde = { workspace = true}
 tokio = { version = "1.45.1", features = ["full"] }
 listenfd = "1.0.2"
 axum = "0.8.4"
-mysql = "26.0.0"
-
+postgres = "0.19.10"

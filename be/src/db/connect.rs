@@ -1,48 +1,49 @@
-use mysql::{OptsBuilder, Pool};
+use postgres::{Client, Config, NoTls};
 
-#[macro_export]
-macro_rules! db_init {
-    ($info:expr) => {
-        let pool = lan_be_frame::db::get_pool($info);
-        lan_be_frame::db::LAZY_DB.update_pool(pool).await;
-    };
-
-    ($info:expr, $migration_folder:literal) => {
-        let pool = lan_be_frame::db::get_pool($info);
-        refinery::embed_migrations!($migration_folder);
-        lan_be_frame::db::migrate(&pool, migrations::runner());
-        lan_be_frame::db::LAZY_DB.update_pool(pool).await;
-    };
-}
+// #[macro_export]
+// macro_rules! db_init {
+//     ($info:expr) => {
+//         let client = lan_be_frame::db::get_client($info);
+//         lan_be_frame::db::LAZY_DB.update_client(client).await;
+// };
+// ($info:expr, $migration_folder:literal) => {
+//     let client = lan_be_frame::db::get_client($info);
+//     refinery::embed_migrations!($migration_folder);
+//     lan_be_frame::db::migrate(&client, migrations::runner());
+//     lan_be_frame::db::LAZY_DB.update_client(client).await;
+// };
+// }
 
 pub struct DBConnectInfo<'a> {
     pub url: &'a str,
     pub user: &'a str,
     pub password: &'a str,
-    pub schema_name: &'a str,
+    pub db_name: &'a str,
 }
 
-pub fn get_pool(info: DBConnectInfo) -> Pool {
-    let opts = OptsBuilder::new()
-        .ip_or_hostname(Some(info.url))
-        .user(Some(info.user))
-        .pass(Some(info.password))
-        .db_name(Some(info.schema_name));
-    let pool = Pool::new(opts).expect("Failed to get DB pool");
-    println!("DB connected");
-    pool
+pub fn get_client(info: DBConnectInfo) -> Client {
+    let mut config = Config::new();
+    config.host(info.url);
+    config.user(info.user);
+    config.password(info.password);
+    config.dbname(info.db_name);
+    config
+        .connect(NoTls)
+        .inspect(|_| println!("Connected to database"))
+        .unwrap()
 }
 
-pub fn migrate(pool: &Pool, runner: refinery::Runner) {
-    let mut conn = pool.get_conn().expect("Failed to get connection");
-    match runner.run(&mut conn) {
-        Ok(report) => {
-            report.applied_migrations().iter().for_each(|migration| {
-                println!("Applied migration: {}", migration.name());
-            });
-        }
-        Err(e) => {
-            panic!("Migration failed: {:?}", e);
-        }
-    }
-}
+// TODO: replace this function using diesel
+// pub fn migrate(client: &Client, runner: refinery::Runner) {
+//     let mut conn = client.get_conn().expect("Failed to get connection");
+//     match runner.run(&mut conn) {
+//         Ok(report) => {
+//             report.applied_migrations().iter().for_each(|migration| {
+//                 println!("Applied migration: {}", migration.name());
+//             });
+//         }
+//         Err(e) => {
+//             panic!("Migration failed: {:?}", e);
+//         }
+//     }
+// }

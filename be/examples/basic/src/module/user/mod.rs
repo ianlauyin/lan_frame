@@ -1,5 +1,5 @@
 use lan_be_frame::{
-    db::Repository,
+    axum::extract::path,
     module::{Module, handler, interface},
 };
 
@@ -8,8 +8,6 @@ mod get_user_info;
 
 use create_user_info::*;
 use get_user_info::*;
-
-use crate::db::table::users::UserTable;
 
 #[derive(Module)]
 pub struct UserModule;
@@ -25,16 +23,14 @@ pub trait UserModule {
 #[handler]
 impl UserModule {
     async fn get_user_info(path_params: GetUserInfoPathParams) -> GetUserInfoResponse {
-        let mut user_repo = Repository::new(UserTable).await;
-        let user = user_repo.select_by_pk(path_params.id).unwrap();
         GetUserInfoResponse {
-            id: user.id,
-            email: user.email,
+            id: path_params.id,
+            email: "test@test.com".to_string(),
         }
     }
 
     async fn create_user_info(req: CreateUserInfoRequest) {
-        let mut user_repo = Repository::new(UserTable).await;
-        user_repo.insert_one(req.partial_user()).unwrap();
+        let email = req.email;
+        println!("create_user_info: {email}");
     }
 }
