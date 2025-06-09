@@ -13,8 +13,6 @@ pub trait Table {
 pub trait Row: FromRow {
     type PKType: Into<Value>;
     fn pk() -> &'static str;
-    // TODO: Review if this fields fn is needed
-    fn fields() -> Vec<String>;
 }
 
 pub trait PartialRow {

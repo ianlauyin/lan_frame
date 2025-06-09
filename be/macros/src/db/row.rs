@@ -14,7 +14,7 @@ pub fn derive_row(input: TokenStream) -> TokenStream {
         field_pairs,
     } = derive_fields(fields);
     let from_row_tokens = from_row_tokens(row, &field_idents);
-    let row_tokens = row_tokens(row, primary_key, &field_idents);
+    let row_tokens = row_tokens(row, primary_key);
     let partial_tokens = partial_tokens(row, primary_key, field_pairs);
 
     quote! {
@@ -62,19 +62,15 @@ fn from_row_tokens(row: &Ident, field_idents: &Vec<&Ident>) -> TokenStream {
     }
 }
 
-fn row_tokens(row: &Ident, primary_key: &Field, field_idents: &Vec<&Ident>) -> TokenStream {
+fn row_tokens(row: &Ident, primary_key: &Field) -> TokenStream {
     let pk_type = &primary_key.ty;
     let pk_field = primary_key.ident.as_ref().unwrap().to_string();
-    let field_names: Vec<String> = field_idents.iter().map(|ident| ident.to_string()).collect();
 
     quote! {
         impl lan_be_frame::db::Row for #row {
             type PKType = #pk_type;
             fn pk() -> &'static str {
                 #pk_field
-            }
-            fn fields() -> Vec<String> {
-                vec![#(#field_names.to_string()),*]
             }
         }
     }
