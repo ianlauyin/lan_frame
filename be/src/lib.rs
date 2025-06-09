@@ -6,6 +6,7 @@ pub mod module;
 
 pub use app::App;
 pub use axum;
+pub use diesel;
 pub use postgres;
 pub use tokio;
 
