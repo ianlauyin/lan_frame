@@ -54,7 +54,10 @@ fn trait_item_fns(item_trait: &ItemTrait) -> Vec<&TraitItemFn> {
             if let TraitItem::Fn(trait_fn) = item {
                 trait_fn
             } else {
-                panic!("Unknown Token Found in Trait Fn {:?}", item);
+                panic!(
+                    "Unknown Token Found in Trait Fn {:?}",
+                    item.to_token_stream()
+                );
             }
         })
         .collect()
