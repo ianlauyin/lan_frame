@@ -1,6 +1,6 @@
-INSERT INTO users (email) VALUES 
-    ('john.doe@example.com'),
-    ('jane.smith@example.com'),
-    ('alice.johnson@example.com'),
-    ('bob.wilson@example.com'),
-    ('charlie.brown@example.com');
+INSERT INTO user (name, email) VALUES 
+    ('John Doe', 'john.doe@example.com'),
+    ('Jane Smith', 'jane.smith@example.com'),
+    ('Alice Johnson', 'alice.johnson@example.com'),
+    ('Bob Wilson', 'bob.wilson@example.com'),
+    ('Charlie Brown', 'charlie.brown@example.com');

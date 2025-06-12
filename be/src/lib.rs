@@ -5,9 +5,10 @@ pub mod http;
 pub mod module;
 
 pub use app::App;
+pub use async_std;
 pub use axum;
-pub use diesel;
-pub use postgres;
+pub use sea_orm;
+pub use sea_orm_migration;
 pub use tokio;
 
 // TODO: add a custom result type for lan_frame and remove all unwrap
