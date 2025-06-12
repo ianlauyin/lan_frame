@@ -1,12 +1,16 @@
 mod connect;
+
+#[cfg(feature = "migrations")]
 mod migration;
-mod migrator;
 
 use sea_orm::DatabaseConnection;
 use std::sync::LazyLock;
 use tokio::sync::Mutex;
 
 pub use connect::*;
+
+#[cfg(feature = "migrations")]
+pub use migration::*;
 
 #[macro_export]
 macro_rules! db_init {
@@ -16,12 +20,10 @@ macro_rules! db_init {
     };
 
     ($info:expr, $migration_folder:literal) => {
-        use lan_be_frame::sea_orm_migration::*;
-
-        let db = lan_be_frame::db::get_db($info).await;
-        lan_be_frame::migrator!($migration_folder);
-        Migrator::up(&db, None).await.unwrap();
-        lan_be_frame::db::LAZY_DB.add_db(db).await;
+        use refinery::embed_migrations;
+        embed_migrations!($migration_folder);
+        lan_be_frame::db::migrate(&$info, migrations::runner()).await;
+        db_init!($info);
     };
 }
 
@@ -42,6 +44,7 @@ impl DB {
         *db_guard = Some(db);
     }
 }
+
 // pub async fn get_client(&mut self) -> &mut Client {
 //     let client_guard = self.client.lock().await;
 // }

@@ -3,12 +3,22 @@ name = "lan_be_frame"
 version = "0.1.0"
 edition = "2024"
 
+[features]
+default = []
+full = ["db", "migrations"]
+db = ["sea-orm"]
+migrations = ["refinery", "tokio-postgres"]
+
 [dependencies]
 lan_be_frame_macros = { path = "macros" }
 serde = { workspace = true}
 tokio = { version = "1.45.1", features = ["full"] }
 listenfd = "1.0.2"
 axum = "0.8.4"
-sea-orm = { version = "1.1.0", features = ["sqlx-postgres","runtime-tokio-rustls"] }
-sea-orm-migration = { version = "1.1.0", features = ["runtime-tokio-rustls"] }
-async-std = { version = "1", features = ["attributes", "tokio1"] }
+
+# db
+sea-orm = { version = "1.1.0", features = ["sqlx-postgres","runtime-tokio-rustls"], optional = true }
+
+# migrations
+tokio-postgres = { version = "0.7.12", optional = true }
+refinery = { workspace = true, optional = true }

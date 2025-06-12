@@ -5,6 +5,7 @@ edition = "2024"
 exclude = ["./db_docker"]
 
 [dependencies]
-lan_be_frame = { path = "../../../be"}
+lan_be_frame = { path = "../../../be", features = ["full"] }
+refinery = { workspace = true}
 serde = { workspace = true}
 

@@ -8,11 +8,8 @@ pub struct DBConnectInfo<'a> {
 }
 
 pub async fn get_db(info: DBConnectInfo<'_>) -> DatabaseConnection {
-    let connection_string = format!(
-        "postgresql://{}/{}?user={}&password={}",
-        info.url, info.db_name, info.user, info.password
-    );
-    match Database::connect(connection_string).await {
+    let connection_url = connection_url(&info);
+    match Database::connect(connection_url).await {
         Ok(db) => {
             println!("Connected to database");
             db
@@ -21,4 +18,11 @@ pub async fn get_db(info: DBConnectInfo<'_>) -> DatabaseConnection {
             panic!("Failed to connect to database: {:?}", e);
         }
     }
+}
+
+pub fn connection_url(info: &DBConnectInfo) -> String {
+    format!(
+        "postgresql://{}/{}?user={}&password={}",
+        info.url, info.db_name, info.user, info.password
+    )
 }

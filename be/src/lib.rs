@@ -1,15 +1,16 @@
 mod app;
 
-pub mod db;
 pub mod http;
 pub mod module;
 
 pub use app::App;
-pub use async_std;
 pub use axum;
-pub use sea_orm;
-pub use sea_orm_migration;
 pub use tokio;
+
+#[cfg(feature = "db")]
+pub mod db;
+#[cfg(feature = "db")]
+pub use sea_orm;
 
 // TODO: add a custom result type for lan_frame and remove all unwrap
 // TODO: add lazylock logger
