@@ -8,3 +8,4 @@ members = [
 
 [workspace.dependencies]
 serde = { version = "1.0.219", features = ["derive"] }
+refinery = { version = "0.8.16", features = ["postgres"] }

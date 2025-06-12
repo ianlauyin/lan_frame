@@ -1,6 +1,10 @@
 # lan_be_frame
 
-A Backend framework for myself using axum, postgres, diesel.
+A Backend framework for myself using axum, postgresql, diesel.
+
+## Optional Dependancy
+
+db auto migrations: `refinery`
 
 ## Start
 

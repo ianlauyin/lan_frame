@@ -1,7 +1,4 @@
-use lan_be_frame::{
-    axum::extract::path,
-    module::{Module, handler, interface},
-};
+use lan_be_frame::module::{Module, handler, interface};
 
 mod create_user_info;
 mod get_user_info;

@@ -7,4 +7,5 @@ exclude = ["./migrations", "./db"]
 [dependencies]
 lan_be_frame = { path = "../../../be"}
 serde = { workspace = true}
+refinery = { workspace = true }
 
