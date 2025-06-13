@@ -7,7 +7,7 @@ pub struct DBConnectInfo<'a> {
     pub db_name: &'a str,
 }
 
-pub async fn get_db(info: DBConnectInfo<'_>) -> DatabaseConnection {
+pub async fn get_connection(info: DBConnectInfo<'_>) -> DatabaseConnection {
     let connection_url = connection_url(&info);
     match Database::connect(connection_url).await {
         Ok(db) => {

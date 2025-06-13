@@ -7,7 +7,7 @@ edition = "2024"
 default = []
 full = ["db", "migrations"]
 db = ["sea-orm"]
-migrations = ["refinery", "tokio-postgres"]
+migrations = ["db","refinery", "tokio-postgres"]
 
 [dependencies]
 lan_be_frame_macros = { path = "macros" }

@@ -15,8 +15,8 @@ pub use migration::*;
 #[macro_export]
 macro_rules! db_init {
     ($info:expr) => {
-        let db = lan_be_frame::db::get_db($info).await;
-        lan_be_frame::db::LAZY_DB.add_db(db).await;
+        let connection = lan_be_frame::db::get_connection($info).await;
+        lan_be_frame::db::LAZY_DB.add_connection(connection).await;
     };
 
     ($info:expr, $migration_folder:literal) => {
@@ -36,16 +36,19 @@ pub struct DB {
 }
 
 impl DB {
-    pub async fn add_db(&self, db: DatabaseConnection) {
+    pub async fn add_connection(&self, connection: DatabaseConnection) {
         let mut db_guard = self.inner.lock().await;
         if db_guard.is_some() {
             panic!("DB already set");
         }
-        *db_guard = Some(db);
+        *db_guard = Some(connection);
+    }
+
+    pub async fn get_connection(&self) -> DatabaseConnection {
+        let connection_guard = self.inner.lock().await;
+        match connection_guard.as_ref() {
+            Some(connection) => connection.clone(), // This will clone the Arc Within the DatabaseConnection
+            None => panic!("DB not initialized"),
+        }
     }
 }
-
-// pub async fn get_client(&mut self) -> &mut Client {
-//     let client_guard = self.client.lock().await;
-// }
-// }
