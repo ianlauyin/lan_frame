@@ -1,3 +1,4 @@
+mod entity;
 mod http;
 mod module;
 
@@ -33,4 +34,10 @@ pub fn response(input: TokenStream) -> TokenStream {
 #[proc_macro_derive(PathParams)]
 pub fn path_params(input: TokenStream) -> TokenStream {
     http::derive_path_params(input.into()).into()
+}
+
+// DB related
+#[proc_macro_derive(Entity, attributes(table_name, primary_key))]
+pub fn entity(input: TokenStream) -> TokenStream {
+    entity::derive_entity(input.into()).into()
 }

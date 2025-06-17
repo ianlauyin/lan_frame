@@ -6,8 +6,8 @@ edition = "2024"
 [features]
 default = []
 full = ["db", "migrations"]
-db = ["sea-orm"]
-migrations = ["db","refinery", "tokio-postgres"]
+db = ["sea-orm","tokio-postgres"]
+migrations = ["db","refinery"]
 
 [dependencies]
 lan_be_frame_macros = { path = "macros" }
@@ -17,8 +17,8 @@ listenfd = "1.0.2"
 axum = "0.8.4"
 
 # db
-sea-orm = { version = "1.1.0", features = ["sqlx-postgres","runtime-tokio-rustls"], optional = true }
+sea-orm = { workspace = true, optional = true }
+tokio-postgres = { version = "0.7.12" , optional = true }
 
 # migrations
-tokio-postgres = { version = "0.7.12", optional = true }
 refinery = { workspace = true, optional = true }

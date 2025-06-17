@@ -1,3 +1,6 @@
+mod book;
+mod user;
+
 use lan_be_frame::db::DBConnectInfo;
 
 pub const DB_CONNECT_INFO: DBConnectInfo = DBConnectInfo {

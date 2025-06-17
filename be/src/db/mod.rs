@@ -8,6 +8,7 @@ use std::sync::LazyLock;
 use tokio::sync::Mutex;
 
 pub use connect::*;
+pub use lan_be_frame_macros::Entity;
 
 #[cfg(feature = "migrations")]
 pub use migration::*;

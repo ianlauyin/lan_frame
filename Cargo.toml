@@ -8,4 +8,9 @@ members = [
 
 [workspace.dependencies]
 serde = { version = "1.0.219", features = ["derive"] }
+
+# be-db
+sea-orm = { version = "1.1.0", features = ["sqlx-postgres","runtime-tokio-rustls"] }
+
+# be-migrations
 refinery = { version = "0.8.16", features = ["tokio-postgres"] }
