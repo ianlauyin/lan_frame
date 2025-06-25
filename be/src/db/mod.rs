@@ -4,8 +4,9 @@ mod entity;
 #[cfg(feature = "migrations")]
 mod migration;
 
-use sea_orm::DatabaseConnection;
 use std::sync::LazyLock;
+
+use sea_orm::DatabaseConnection;
 use tokio::sync::RwLock;
 
 pub use connect::*;

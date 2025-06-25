@@ -1,8 +1,7 @@
 [workspace]
 members = [
     "be", 
-    "be/macros", 
-    "fe",
+    "be/macros",
     "be/examples/*"
 ]
 

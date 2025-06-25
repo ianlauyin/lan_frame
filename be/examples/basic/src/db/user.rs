@@ -4,9 +4,9 @@ use lan_be_frame::db::Entity;
 #[table_name = "user"]
 pub struct User {
     #[primary_key]
-    id: u16,
-    name: String,
-    email: String,
+    pub id: u16,
+    pub name: String,
+    pub email: String,
 }
 
 // use lan_be_frame::sea_orm::entity::prelude::*;
@@ -15,9 +15,9 @@ pub struct User {
 // #[sea_orm(table_name = "user")]
 // pub struct Model {
 //     #[sea_orm(primary_key)]
-//     pub id: u16,
-//     pub name: String,
-//     pub email: String,
+//     id: u16,
+//     name: String,
+//     email: String,
 // }
 
 // impl ActiveModelBehavior for ActiveModel {}

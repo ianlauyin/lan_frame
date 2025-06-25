@@ -3,11 +3,11 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Deserialize, PathParams)]
 pub struct GetUserInfoPathParams {
-    pub(super) id: i32,
+    pub(super) id: u16,
 }
 
 #[derive(Serialize, Response)]
 pub struct GetUserInfoResponse {
-    pub(super) id: i32,
+    pub(super) id: u16,
     pub(super) email: String,
 }

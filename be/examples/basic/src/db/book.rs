@@ -5,12 +5,12 @@ use lan_be_frame::db::{Entity, column_type::Uuid};
 pub struct Book {
     #[primary_key]
     #[auto_increment = false]
-    id: Uuid,
+    pub id: Uuid,
     #[default_value = "Book Template"]
     #[indexed]
-    name: String,
+    pub name: String,
     #[nullable]
-    description: Option<String>,
+    pub description: Option<String>,
 }
 
 // use lan_be_frame::sea_orm::entity::prelude::*;
