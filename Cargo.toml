@@ -1,15 +1,36 @@
+[package]
+name = "lan_be_frame"
+version = "0.1.0"
+edition = "2024"
+
+[features]
+default = []
+full = ["db", "migrations"]
+db = ["sea-orm","tokio-postgres"]
+migrations = ["db","refinery"]
+
+[dependencies]
+lan_be_frame_macros = { path = "macros" }
+serde = { workspace = true}
+tokio = { version = "1.45.1", features = ["full"] }
+listenfd = "1.0.2"
+axum = "0.8.4"
+async-trait = "0.1.87"
+# db
+sea-orm = { workspace = true, optional = true }
+tokio-postgres = { version = "0.7.12" , optional = true }
+# migrations
+refinery = { workspace = true, optional = true }
+
 [workspace]
 members = [
-    "be", 
-    "be/macros",
-    "be/examples/*"
+    "macros",
+    "examples/*"
 ]
 
 [workspace.dependencies]
 serde = { version = "1.0.219", features = ["derive"] }
-
-# be-db
+# db
 sea-orm = { version = "1.1.0", features = ["sqlx-postgres","runtime-tokio-rustls"] }
-
-# be-migrations
+# migrations
 refinery = { version = "0.8.16", features = ["tokio-postgres"] }
