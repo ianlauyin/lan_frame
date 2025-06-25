@@ -7,6 +7,7 @@ pub async fn migrate(info: &DBConnectInfo<'_>, runner: Runner) {
     let connection_url = connection_url(info);
     let (mut client, connection) = connect(&connection_url, NoTls).await.unwrap();
 
+    // This Connection only used for debugging when migration connection error
     let connection_handle = tokio::spawn(async move {
         if let Err(e) = connection.await {
             panic!("Connection error: {}", e);

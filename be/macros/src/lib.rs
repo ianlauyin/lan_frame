@@ -37,7 +37,21 @@ pub fn path_params(input: TokenStream) -> TokenStream {
 }
 
 // DB related
-#[proc_macro_derive(Entity, attributes(table_name, primary_key))]
+#[proc_macro_derive(
+    Entity,
+    attributes(
+        table_name,
+        primary_key,
+        nullable,
+        auto_increment,
+        unique,
+        indexed,
+        default_value,
+    )
+)]
 pub fn entity(input: TokenStream) -> TokenStream {
     entity::derive_entity(input.into()).into()
 }
+
+// TODO: enum column type
+// ref: https://www.sea-ql.org/SeaORM/docs/generate-entity/enumeration/

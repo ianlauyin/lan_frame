@@ -13,8 +13,9 @@ pub mod db;
 pub use sea_orm;
 
 // TODO: add a custom result type for lan_frame and remove all unwrap
-// TODO: add lazylock logger
-// TODO: remove println!() and use logger
-// TODO: add test
 // TODO: update all reexport
+// TODO: add test
 // TODO: Update all docs
+
+// TODO: Future Impl:
+// TODO: Lazylock logger, remove println!() and use logger

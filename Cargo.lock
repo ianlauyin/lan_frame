@@ -1637,6 +1637,7 @@ dependencies = [
 name = "lan_be_frame"
 version = "0.1.0"
 dependencies = [
+ "async-trait",
  "axum",
  "lan_be_frame_macros",
  "listenfd",

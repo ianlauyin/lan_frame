@@ -1,12 +1,16 @@
-use lan_be_frame::db::Entity;
+use lan_be_frame::db::{Entity, column_type::Uuid};
 
 #[derive(Entity)]
 #[table_name = "book"]
 pub struct Book {
     #[primary_key]
-    id: i32,
+    #[auto_increment = false]
+    id: Uuid,
+    #[default_value = "Book Template"]
+    #[indexed]
     name: String,
-    description: String,
+    #[nullable]
+    description: Option<String>,
 }
 
 // use lan_be_frame::sea_orm::entity::prelude::*;
@@ -14,10 +18,12 @@ pub struct Book {
 // #[derive(Clone, Debug, PartialEq, Eq, DeriveEntityModel)]
 // #[sea_orm(table_name = "book")]
 // pub struct Model {
-//     #[sea_orm(primary_key)]
-//     pub id: i32,
+//     #[sea_orm(primary_key, auto_increment = false)]
+//     pub id: Uuid,
+//     #[sea_orm(default_value = "Book Template", indexed)]
 //     pub name: String,
-//     pub description: String,
+//     #[sea_orm(nullable)]
+//     pub description: Option<String>,
 // }
 
 // impl ActiveModelBehavior for ActiveModel {}

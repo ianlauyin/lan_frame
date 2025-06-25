@@ -1,14 +1,21 @@
 mod connect;
+mod entity;
 
 #[cfg(feature = "migrations")]
 mod migration;
 
 use sea_orm::DatabaseConnection;
 use std::sync::LazyLock;
-use tokio::sync::Mutex;
+use tokio::sync::RwLock;
 
 pub use connect::*;
-pub use lan_be_frame_macros::Entity;
+pub use entity::*;
+pub mod column_type {
+    pub use sea_orm::prelude::{
+        Date, DateTime, DateTimeWithTimeZone, Decimal, Json, Time, TimeDate, TimeDateTime,
+        TimeDateTimeWithTimeZone, TimeTime, Uuid,
+    };
+}
 
 #[cfg(feature = "migrations")]
 pub use migration::*;
@@ -17,7 +24,7 @@ pub use migration::*;
 macro_rules! db_init {
     ($info:expr) => {
         let connection = lan_be_frame::db::get_connection($info).await;
-        lan_be_frame::db::LAZY_DB.add_connection(connection).await;
+        lan_be_frame::db::add_db(connection).await;
     };
 
     ($info:expr, $migration_folder:literal) => {
@@ -28,28 +35,20 @@ macro_rules! db_init {
     };
 }
 
-pub static LAZY_DB: LazyLock<DB> = LazyLock::new(|| DB {
-    inner: Mutex::new(None),
-});
+pub static LAZY_DB: LazyLock<RwLock<Option<DatabaseConnection>>> = LazyLock::new(Default::default);
 
-pub struct DB {
-    inner: Mutex<Option<DatabaseConnection>>,
+pub async fn add_db(connection: DatabaseConnection) {
+    let mut db = LAZY_DB.write().await;
+    if db.is_some() {
+        panic!("DB already set");
+    }
+    *db = Some(connection);
 }
 
-impl DB {
-    pub async fn add_connection(&self, connection: DatabaseConnection) {
-        let mut db_guard = self.inner.lock().await;
-        if db_guard.is_some() {
-            panic!("DB already set");
-        }
-        *db_guard = Some(connection);
-    }
-
-    pub async fn get_connection(&self) -> DatabaseConnection {
-        let connection_guard = self.inner.lock().await;
-        match connection_guard.as_ref() {
-            Some(connection) => connection.clone(), // This will clone the Arc Within the DatabaseConnection
-            None => panic!("DB not initialized"),
-        }
+pub async fn get_db() -> DatabaseConnection {
+    let db = LAZY_DB.read().await;
+    match db.as_ref() {
+        Some(connection) => connection.clone(),
+        None => panic!("DB not initialized"),
     }
 }
