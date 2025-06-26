@@ -1,6 +1,7 @@
 mod select;
 
 pub use lan_be_frame_macros::Entity;
+pub use lan_be_frame_macros::condition;
 
 use sea_orm::EntityTrait as OrmEntityTrait;
 use select::Select;

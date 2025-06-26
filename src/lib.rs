@@ -9,8 +9,6 @@ pub use tokio;
 
 #[cfg(feature = "db")]
 pub mod db;
-#[cfg(feature = "db")]
-pub use sea_orm;
 
 // TODO: add a custom result type for lan_frame and remove all unwrap
 // TODO: update all reexport

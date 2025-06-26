@@ -5,6 +5,13 @@ pub struct Select<T: sea_orm::EntityTrait> {
 }
 
 impl<T: sea_orm::EntityTrait> Select<T> {
+    pub fn filter<F: sea_orm::sea_query::IntoCondition>(self, filter: F) -> Self {
+        use sea_orm::QueryFilter;
+        Self {
+            inner: self.inner.filter(filter),
+        }
+    }
+
     pub async fn one(self) -> SingleResult<T> {
         self.inner.one(&Self::db().await).await
     }

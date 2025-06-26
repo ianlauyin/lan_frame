@@ -1,8 +1,5 @@
-mod book;
-mod user;
-
-pub use book::Book;
-pub use user::User;
+pub mod book;
+pub mod user;
 
 use lan_be_frame::db::DBConnectInfo;
 

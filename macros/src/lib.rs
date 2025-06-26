@@ -1,3 +1,4 @@
+mod condition;
 mod entity;
 mod http;
 mod module;
@@ -51,6 +52,11 @@ pub fn path_params(input: TokenStream) -> TokenStream {
 )]
 pub fn entity(input: TokenStream) -> TokenStream {
     entity::derive_entity(input.into()).into()
+}
+
+#[proc_macro]
+pub fn condition(input: TokenStream) -> TokenStream {
+    condition::condition(input.into()).into()
 }
 
 // TODO: enum column type

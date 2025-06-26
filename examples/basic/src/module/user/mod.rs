@@ -1,5 +1,5 @@
 use lan_be_frame::{
-    db::EntityTrait,
+    db::{EntityTrait, condition},
     module::{Module, handler, interface},
 };
 
@@ -9,7 +9,7 @@ mod get_user_info;
 use create_user_info::*;
 use get_user_info::*;
 
-use crate::db::User;
+use crate::db::user;
 
 #[derive(Module)]
 pub struct UserModule;
@@ -25,7 +25,12 @@ pub trait UserModule {
 #[handler]
 impl UserModule {
     async fn get_user_info(path_params: GetUserInfoPathParams) -> GetUserInfoResponse {
-        let user = User::select_by_id(path_params.id).await.unwrap().unwrap();
+        let user = user::User::select()
+            .filter(condition!(user, id = path_params.id))
+            .one()
+            .await
+            .unwrap()
+            .unwrap();
         GetUserInfoResponse {
             id: user.id,
             email: user.email,

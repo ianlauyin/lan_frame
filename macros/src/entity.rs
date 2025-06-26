@@ -18,7 +18,7 @@ pub fn derive_entity(input: TokenStream) -> TokenStream {
         impl lan_be_frame::db::EntityTrait for #req_name {
             type OrmEntity = Entity;
         }
-        use lan_be_frame::sea_orm::entity::prelude::*;
+        use sea_orm::entity::prelude::*;
         #[derive(Clone, Debug, PartialEq, Eq, DeriveEntityModel)]
         #[sea_orm(table_name = #table_name)]
         pub struct Model {
