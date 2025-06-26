@@ -66,6 +66,8 @@ fn get_table_name(meta: &Meta) -> String {
     lit_str.value()
 }
 
+// TODO: Add type check when parsing
+// ref: https://docs.rs/sqlx/latest/sqlx/postgres/types/index.html
 #[derive(Default)]
 struct ModelFieldAttr {
     primary_key: bool,
