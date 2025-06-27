@@ -33,26 +33,33 @@ fn parse_remaining(input_iter: &mut IntoIter, entity_path: &Ident) -> TokenStrea
             continue;
         }
 
-        let column_name = parse_column_name(tt);
-        let operator_token = parse_operator(input_iter);
-        let first_value_tt = input_iter.next().expect("Missing value");
-        let mut values_tt = vec![first_value_tt];
-        while let Some(value_tt) = input_iter.next() {
-            match value_tt {
-                // TODO: handle AND and OR seperator
-                _ => values_tt.push(value_tt),
-            }
-        }
-        let values_stream = TokenStream::from_iter(values_tt);
-        all_conditions = quote! {
-            #entity_path::Column::#column_name #operator_token(#values_stream)
-        };
-        break;
+        all_conditions = parse_condition(tt, input_iter, entity_path);
     }
     if all_conditions.is_empty() {
         panic!("Missing conditions");
     }
     all_conditions
+}
+
+fn parse_condition(
+    first_tt: TokenTree,
+    input_iter: &mut IntoIter,
+    entity_path: &Ident,
+) -> TokenStream {
+    let column_name = parse_column_name(first_tt);
+    let operator_token = parse_operator(input_iter);
+    let first_value_tt = input_iter.next().expect("Missing value");
+    let mut values_tt = vec![first_value_tt];
+    while let Some(value_tt) = input_iter.next() {
+        match value_tt {
+            // TODO: handle AND and OR seperator
+            _ => values_tt.push(value_tt),
+        }
+    }
+    let values_stream = TokenStream::from_iter(values_tt);
+    quote! {
+        #entity_path::Column::#column_name #operator_token(#values_stream)
+    }
 }
 
 fn parse_column_name(tt: TokenTree) -> Ident {
