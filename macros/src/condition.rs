@@ -33,7 +33,8 @@ fn parse_remaining(input_iter: &mut IntoIter, entity_path: &Ident) -> TokenStrea
             continue;
         }
 
-        all_conditions = parse_condition(tt, input_iter, entity_path);
+        let (condition, next_token) = parse_condition(tt, input_iter, entity_path);
+        all_conditions = condition;
     }
     if all_conditions.is_empty() {
         panic!("Missing conditions");
@@ -41,25 +42,48 @@ fn parse_remaining(input_iter: &mut IntoIter, entity_path: &Ident) -> TokenStrea
     all_conditions
 }
 
+enum NextToken {
+    AND,
+    OR,
+    NONE,
+}
+
 fn parse_condition(
     first_tt: TokenTree,
     input_iter: &mut IntoIter,
     entity_path: &Ident,
-) -> TokenStream {
+) -> (TokenStream, NextToken) {
+    let next_token: NextToken;
     let column_name = parse_column_name(first_tt);
     let operator_token = parse_operator(input_iter);
     let first_value_tt = input_iter.next().expect("Missing value");
     let mut values_tt = vec![first_value_tt];
-    while let Some(value_tt) = input_iter.next() {
+    loop {
+        let value_tt = input_iter.next();
         match value_tt {
-            // TODO: handle AND and OR seperator
-            _ => values_tt.push(value_tt),
+            Some(TokenTree::Ident(ident)) if ident.to_string() == "AND" => {
+                next_token = NextToken::AND;
+                break;
+            }
+            Some(TokenTree::Ident(ident)) if ident.to_string() == "OR" => {
+                next_token = NextToken::OR;
+                break;
+            }
+            None => {
+                next_token = NextToken::NONE;
+                break;
+            }
+            Some(value_tt) => values_tt.push(value_tt),
         }
     }
+
     let values_stream = TokenStream::from_iter(values_tt);
-    quote! {
-        #entity_path::Column::#column_name #operator_token(#values_stream)
-    }
+    (
+        quote! {
+            #entity_path::Column::#column_name #operator_token(#values_stream)
+        },
+        next_token,
+    )
 }
 
 fn parse_column_name(tt: TokenTree) -> Ident {
