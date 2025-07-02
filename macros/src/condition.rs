@@ -1,5 +1,5 @@
 use proc_macro2::{TokenStream, TokenTree, token_stream::IntoIter};
-use quote::{ToTokens, quote};
+use quote::{ToTokens, TokenStreamExt, quote};
 use syn::Ident;
 
 pub fn condition(input: TokenStream) -> TokenStream {
@@ -16,7 +16,8 @@ pub fn condition(input: TokenStream) -> TokenStream {
     if punct.as_char() != ',' {
         panic!("Expected ',' after entity path");
     }
-    let all_conditions = parse_remaining(&mut input_iter, &entity_path);
+    let first_token = input_iter.next().expect("Missing conditions");
+    let all_conditions = parse_group_conditions(first_token, &mut input_iter, &entity_path);
     quote! {
         {
             use sea_orm::ColumnTrait;
@@ -25,79 +26,94 @@ pub fn condition(input: TokenStream) -> TokenStream {
     }
 }
 
-fn parse_remaining(input_iter: &mut IntoIter, entity_path: &Ident) -> TokenStream {
-    let mut all_conditions = quote!();
-    while let Some(tt) = input_iter.next() {
-        if let TokenTree::Group(group) = tt {
-            // TODO: handle branklet
-            continue;
-        }
-
-        let (condition, next_token) = parse_condition(tt, input_iter, entity_path);
-        all_conditions = condition;
-    }
-    if all_conditions.is_empty() {
-        panic!("Missing conditions");
-    }
-    all_conditions
-}
-
-enum NextToken {
-    AND,
-    OR,
-    NONE,
-}
-
-fn parse_condition(
-    first_tt: TokenTree,
+// Should return TokenStream of IntoCondition
+fn parse_group_conditions(
+    first_token: TokenTree,
     input_iter: &mut IntoIter,
     entity_path: &Ident,
-) -> (TokenStream, NextToken) {
-    let next_token: NextToken;
-    let column_name = parse_column_name(first_tt);
-    let operator_token = parse_operator(input_iter);
-    let first_value_tt = input_iter.next().expect("Missing value");
-    let mut values_tt = vec![first_value_tt];
-    loop {
-        let value_tt = input_iter.next();
-        match value_tt {
-            Some(TokenTree::Ident(ident)) if ident.to_string() == "AND" => {
-                next_token = NextToken::AND;
+) -> TokenStream {
+    match first_token {
+        TokenTree::Group(group) => {
+            let mut group_conditions = group.stream().into_iter();
+            let group_first_token = group_conditions.next().expect("Missing conditions");
+            parse_group_conditions(group_first_token, &mut group_conditions, entity_path)
+        }
+        TokenTree::Ident(ident) => {
+            let (mut condition_wrapper, condition) =
+                parse_condition(ident, input_iter, entity_path);
+            // Simple Case: Only return Column::column.operator(values)
+            if condition_wrapper == ConditionWrapper::None {
+                return condition;
+            }
+            // Complex Case: return Cond::all/Cond::any
+            todo!("loop util condition_wrapper is None")
+        }
+        _ => panic!("Unexpected token {:?}", first_token),
+    }
+}
+
+#[derive(PartialEq)]
+enum ConditionWrapper {
+    Any,
+    All,
+    None,
+}
+
+impl ToTokens for ConditionWrapper {
+    fn to_tokens(&self, tokens: &mut TokenStream) {
+        tokens.extend(match self {
+            ConditionWrapper::Any => quote! {lan_be_frame::sea_orm::Condition::any()},
+            ConditionWrapper::All => quote! {lan_be_frame::sea_orm::Condition::all()},
+            ConditionWrapper::None => quote! {},
+        });
+    }
+}
+
+// Should return a ConditionWrapper and a TokenStream with Column::column.operator(values)
+fn parse_condition(
+    column_name_ident: Ident,
+    input_iter: &mut IntoIter,
+    entity_path: &Ident,
+) -> (ConditionWrapper, TokenStream) {
+    let mut condition_wrapper = ConditionWrapper::None;
+    let column_name = parse_column_name(column_name_ident);
+    let operator = parse_operator(input_iter.next());
+    let mut values = TokenStream::new();
+    while let Some(tt) = input_iter.next() {
+        match tt {
+            TokenTree::Ident(ident) if ident.to_string() == "AND" => {
+                condition_wrapper = ConditionWrapper::All;
                 break;
             }
-            Some(TokenTree::Ident(ident)) if ident.to_string() == "OR" => {
-                next_token = NextToken::OR;
+            TokenTree::Ident(ident) if ident.to_string() == "OR" => {
+                condition_wrapper = ConditionWrapper::Any;
                 break;
             }
-            None => {
-                next_token = NextToken::NONE;
-                break;
-            }
-            Some(value_tt) => values_tt.push(value_tt),
+            _ => values.append(tt),
         }
     }
-
-    let values_stream = TokenStream::from_iter(values_tt);
+    if values.is_empty() {
+        panic!("Missing values");
+    }
     (
+        condition_wrapper,
         quote! {
-            #entity_path::Column::#column_name #operator_token(#values_stream)
+            #entity_path::Column::#column_name #operator(#values)
         },
-        next_token,
     )
 }
 
-fn parse_column_name(tt: TokenTree) -> Ident {
-    let TokenTree::Ident(column_name) = tt else {
-        panic!("Column name must be an ident: {:?}", tt);
-    };
+fn parse_column_name(column_name_ident: Ident) -> Ident {
     Ident::new(
-        &snake_to_camel(&column_name.to_string()),
-        column_name.span(),
+        &snake_to_camel(&column_name_ident.to_string()),
+        column_name_ident.span(),
     )
 }
 
-fn parse_operator(input_iter: &mut IntoIter) -> TokenStream {
-    let operator_tt = input_iter.next().expect("Missing operator");
+fn parse_operator(operator_tt_opt: Option<TokenTree>) -> TokenStream {
+    let Some(operator_tt) = operator_tt_opt else {
+        panic!("Missing operator");
+    };
     match operator_tt {
         TokenTree::Punct(punct) if punct.as_char() == '=' => {
             quote!(.eq)
