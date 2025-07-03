@@ -2,6 +2,7 @@ use proc_macro2::{TokenStream, TokenTree, token_stream::IntoIter};
 use quote::{ToTokens, TokenStreamExt, quote};
 use syn::Ident;
 
+// TODO: update prase conditions flow
 pub fn condition(input: TokenStream) -> TokenStream {
     let mut input_iter = input.into_iter();
     let column_tokens = parse_path_to_column(input_iter.next());
@@ -51,37 +52,26 @@ fn parse_group_conditions(
                 return condition;
             }
             // Complex Case: return Cond::all/Cond::any
-            todo!("loop util condition_wrapper is None")
+            let mut conditions = vec![condition];
+            condition_loop(
+                input_iter,
+                column_tokens,
+                &mut condition_wrapper,
+                &mut conditions,
+            );
+            quote! { #condition_wrapper #(.add(#conditions))* }
         }
         _ => panic!("Unexpected token {:?}", first_token),
     }
 }
 
-#[derive(PartialEq)]
-enum ConditionWrapper {
-    Any,
-    All,
-    None,
-}
-
-impl ToTokens for ConditionWrapper {
-    fn to_tokens(&self, tokens: &mut TokenStream) {
-        tokens.extend(match self {
-            ConditionWrapper::Any => quote! {lan_be_frame::sea_orm::Condition::any()},
-            ConditionWrapper::All => quote! {lan_be_frame::sea_orm::Condition::all()},
-            ConditionWrapper::None => quote! {},
-        });
-    }
-}
-
-// Should return a ConditionWrapper and a TokenStream with Column::column.operator(values)
 fn parse_condition(
-    column_name_ident: Ident,
+    raw_column_name: Ident,
     input_iter: &mut IntoIter,
     column_tokens: &TokenStream,
 ) -> (ConditionWrapper, TokenStream) {
     let mut condition_wrapper = ConditionWrapper::None;
-    let column_name = parse_column_name(column_name_ident);
+    let column_name = snake_to_camel_column(raw_column_name);
     let operator = parse_operator(input_iter.next());
     let mut values = TokenStream::new();
     while let Some(tt) = input_iter.next() {
@@ -108,11 +98,48 @@ fn parse_condition(
     )
 }
 
-fn parse_column_name(column_name_ident: Ident) -> Ident {
-    Ident::new(
-        &snake_to_camel(&column_name_ident.to_string()),
-        column_name_ident.span(),
-    )
+fn condition_loop(
+    input_iter: &mut IntoIter,
+    column_tokens: &TokenStream,
+    condition_wrapper: &mut ConditionWrapper,
+    conditions: &mut Vec<TokenStream>,
+) {
+    loop {
+        let next_column_tt = input_iter.next();
+        let Some(next_column_tt) = next_column_tt else {
+            panic!("Missing condition after {}", condition_wrapper.as_str());
+        };
+        let (next_condition_wrapper, next_condition) = match next_column_tt {
+            TokenTree::Group(group) => {
+                let mut group_conditions = group.stream().into_iter();
+                let group_first_token = group_conditions.next().expect("Missing conditions");
+                let group_condition =
+                    parse_group_conditions(group_first_token, &mut group_conditions, column_tokens);
+                let group_condition_wrapper = match input_iter.next() {
+                    Some(TokenTree::Ident(ident)) if ident.to_string() == "AND" => {
+                        ConditionWrapper::All
+                    }
+                    Some(TokenTree::Ident(ident)) if ident.to_string() == "OR" => {
+                        ConditionWrapper::Any
+                    }
+                    _ => ConditionWrapper::None,
+                };
+                (group_condition_wrapper, group_condition)
+            }
+            TokenTree::Ident(next_column_ident) => {
+                parse_condition(next_column_ident, input_iter, column_tokens)
+            }
+            _ => panic!("Unexpected token {:?}", next_column_tt),
+        };
+        conditions.push(next_condition);
+        if next_condition_wrapper == ConditionWrapper::None {
+            break;
+        }
+        if next_condition_wrapper != *condition_wrapper {
+            panic!("Cannot mix AND and OR conditions");
+        }
+        *condition_wrapper = next_condition_wrapper;
+    }
 }
 
 fn parse_operator(operator_tt_opt: Option<TokenTree>) -> TokenStream {
@@ -127,9 +154,42 @@ fn parse_operator(operator_tt_opt: Option<TokenTree>) -> TokenStream {
     }
 }
 
-fn snake_to_camel(snake: &str) -> String {
-    snake
-        .split("_")
-        .map(|s| s[0..1].to_uppercase() + &s[1..])
-        .collect()
+fn snake_to_camel_column(snake: Ident) -> Ident {
+    Ident::new(
+        &snake
+            .to_string()
+            .split("_")
+            .map(|s| s[0..1].to_uppercase() + &s[1..])
+            .collect::<String>(),
+        snake.span(),
+    )
+}
+
+#[derive(PartialEq)]
+enum ConditionWrapper {
+    Any,
+    All,
+    None,
+}
+
+impl ConditionWrapper {
+    fn as_str(&self) -> &str {
+        match self {
+            ConditionWrapper::Any => "OR",
+            ConditionWrapper::All => "AND",
+            ConditionWrapper::None => "",
+        }
+    }
+}
+
+impl ToTokens for ConditionWrapper {
+    fn to_tokens(&self, tokens: &mut TokenStream) {
+        tokens.extend(match self {
+            ConditionWrapper::Any => quote! {sea_orm::Condition::any()},
+            ConditionWrapper::All => quote! {sea_orm::Condition::all()},
+            ConditionWrapper::None => {
+                panic!("ConditionWrapper::None should not be used in ToTokens")
+            }
+        });
+    }
 }
