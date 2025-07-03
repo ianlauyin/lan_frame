@@ -4,20 +4,15 @@ use syn::Ident;
 
 pub fn condition(input: TokenStream) -> TokenStream {
     let mut input_iter = input.into_iter();
-    let Some(entity_path_tt) = input_iter.next() else {
-        panic!("Missing db entity path");
-    };
-    let TokenTree::Ident(entity_path) = entity_path_tt else {
-        panic!("db entity path must be an ident");
-    };
+    let column_tokens = parse_path_to_column(input_iter.next());
     let Some(TokenTree::Punct(punct)) = input_iter.next() else {
         panic!("Missing conditions");
     };
     if punct.as_char() != ',' {
-        panic!("Expected ',' after entity path");
+        panic!("Expected ',' after entity module path");
     }
     let first_token = input_iter.next().expect("Missing conditions");
-    let all_conditions = parse_group_conditions(first_token, &mut input_iter, &entity_path);
+    let all_conditions = parse_group_conditions(first_token, &mut input_iter, &column_tokens);
     quote! {
         {
             use sea_orm::ColumnTrait;
@@ -26,21 +21,31 @@ pub fn condition(input: TokenStream) -> TokenStream {
     }
 }
 
+fn parse_path_to_column(entity_path_tt_opt: Option<TokenTree>) -> TokenStream {
+    let Some(entity_path_tt) = entity_path_tt_opt else {
+        panic!("Missing db entity module path");
+    };
+    let TokenTree::Ident(entity_path) = entity_path_tt else {
+        panic!("db entity module path must be an ident");
+    };
+    quote! {#entity_path::Column}
+}
+
 // Should return TokenStream of IntoCondition
 fn parse_group_conditions(
     first_token: TokenTree,
     input_iter: &mut IntoIter,
-    entity_path: &Ident,
+    column_tokens: &TokenStream,
 ) -> TokenStream {
     match first_token {
         TokenTree::Group(group) => {
             let mut group_conditions = group.stream().into_iter();
             let group_first_token = group_conditions.next().expect("Missing conditions");
-            parse_group_conditions(group_first_token, &mut group_conditions, entity_path)
+            parse_group_conditions(group_first_token, &mut group_conditions, column_tokens)
         }
         TokenTree::Ident(ident) => {
             let (mut condition_wrapper, condition) =
-                parse_condition(ident, input_iter, entity_path);
+                parse_condition(ident, input_iter, column_tokens);
             // Simple Case: Only return Column::column.operator(values)
             if condition_wrapper == ConditionWrapper::None {
                 return condition;
@@ -73,7 +78,7 @@ impl ToTokens for ConditionWrapper {
 fn parse_condition(
     column_name_ident: Ident,
     input_iter: &mut IntoIter,
-    entity_path: &Ident,
+    column_tokens: &TokenStream,
 ) -> (ConditionWrapper, TokenStream) {
     let mut condition_wrapper = ConditionWrapper::None;
     let column_name = parse_column_name(column_name_ident);
@@ -98,7 +103,7 @@ fn parse_condition(
     (
         condition_wrapper,
         quote! {
-            #entity_path::Column::#column_name #operator(#values)
+            #column_tokens::#column_name #operator(#values)
         },
     )
 }
