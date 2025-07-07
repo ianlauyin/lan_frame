@@ -29,7 +29,6 @@ fn parse_path_to_column(entity_path_tt_opt: Option<TokenTree>) -> TokenStream {
     quote! {#entity_path::Column}
 }
 
-// TODO: refactor this loop
 fn parse_conditions(input_iter: &mut IntoIter, column_tokens: &TokenStream) -> TokenStream {
     let mut condition_wrapper = ConditionWrapper::None;
     let mut conditions = vec![];
@@ -44,20 +43,25 @@ fn parse_conditions(input_iter: &mut IntoIter, column_tokens: &TokenStream) -> T
             }
         };
         conditions.push(next_condition);
-        if next_condition_wrapper == ConditionWrapper::None {
-            break;
+
+        match (&condition_wrapper, next_condition_wrapper) {
+            (_, ConditionWrapper::None) => break,
+            (ConditionWrapper::None, next_condition_wrapper) => {
+                condition_wrapper = next_condition_wrapper;
+            }
+            (ConditionWrapper::Any, ConditionWrapper::All)
+            | (ConditionWrapper::All, ConditionWrapper::Any) => {
+                panic!("Cannot mix AND and OR conditions");
+            }
+            _ => {}
         }
-        if condition_wrapper != ConditionWrapper::None
-            && next_condition_wrapper != condition_wrapper
-        {
-            panic!("Cannot mix AND and OR conditions");
-        }
-        condition_wrapper = next_condition_wrapper;
     }
-    if conditions.len() == 1 {
-        return conditions.pop().unwrap();
+
+    match conditions.len() {
+        0 => panic!("Missing conditions"),
+        1 => conditions.pop().unwrap(),
+        _ => quote! { #condition_wrapper #(.add(#conditions))* },
     }
-    quote! { #condition_wrapper #(.add(#conditions))* }
 }
 
 fn parse_condition(

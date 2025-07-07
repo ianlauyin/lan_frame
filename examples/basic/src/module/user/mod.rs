@@ -26,11 +26,9 @@ pub trait UserModule {
 impl UserModule {
     async fn get_user_info(path_params: GetUserInfoPathParams) -> GetUserInfoResponse {
         let user = user::User::select()
-            .filter(
-                condition!(user, 
-                    id = path_params.id 
-                    AND (email = "test@test.com" OR name = "test")),
-            )
+            .filter(condition!(user, 
+                (email = "test@test.com" OR name = "test") 
+                AND id = path_params.id ))
             .one()
             .await
             .unwrap()
